@@ -26,12 +26,16 @@ const seed = ({ userData, productData }) => {
         house_number INT NOT NULL,
         street VARCHAR(50) NOT NULL,
         basket TEXT,
+        login_attempts INT DEFAULT 0,
+        locked_till TIMESTAMP DEFAULT NULL,
         created_at DATE
       )`);
     })
     .then(() => {
       return db.query(`CREATE TABLE products (
         product_id SERIAL PRIMARY KEY,
+        seller_id INT REFERENCES users(user_id),
+        image TEXT,
         product_name VARCHAR(100) UNIQUE NOT NULL,
         description TEXT NOT NULL,
         price DECIMAL(6, 2) NOT NULL CHECK (price >= 0),
@@ -81,6 +85,8 @@ const seed = ({ userData, productData }) => {
       return db.query(
         `INSERT INTO products (
           product_name,
+          seller_id,
+          image,
           description,
           price,
           stock,
@@ -91,6 +97,8 @@ const seed = ({ userData, productData }) => {
         [
           productData.map((product) => [
             product.product_name,
+            product.seller_id,
+            product.image,
             product.description,
             product.price,
             product.stock,

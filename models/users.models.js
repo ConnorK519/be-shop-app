@@ -1,6 +1,6 @@
 const db = require("../db/connection");
 
-exports.createUser = async (newUser) => {
+exports.postUser = async (newUser) => {
   return await db.query(
     `INSERT INTO users (
     username,
@@ -18,5 +18,22 @@ exports.createUser = async (newUser) => {
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
     newUser
+  );
+};
+
+exports.getUserByEmail = async (email) => {
+  return db.query(`SELECT * FROM users WHERE email = ?`, email).then((rows) => {
+    return rows[0][0];
+  });
+};
+
+exports.patchUserLoginAttempts = (number, user_id) => {
+  return db.query(
+    `
+  UPDATE users
+  SET login_attempts = login_attempts + ?
+  WHERE user_id = ?
+  `,
+    [number, user_id]
   );
 };

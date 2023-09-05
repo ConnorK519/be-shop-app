@@ -1,6 +1,8 @@
 module.exports = [
   {
     product_name: "Wireless Headphones",
+    seller_id: 2,
+    image: "",
     description: "High-quality wireless headphones with noise cancellation",
     price: 129.99,
     stock: 50,
@@ -9,6 +11,8 @@ module.exports = [
   },
   {
     product_name: "Gaming Laptop",
+    seller_id: 6,
+    image: "",
     description: "Powerful gaming laptop with RGB lighting",
     price: 1999.99,
     stock: 20,
@@ -17,6 +21,8 @@ module.exports = [
   },
   {
     product_name: "Running Shoes",
+    seller_id: 3,
+    image: "",
     description: "Performance running shoes for athletes",
     price: 89.99,
     stock: 100,
@@ -25,6 +31,8 @@ module.exports = [
   },
   {
     product_name: "Smart TV",
+    seller_id: 2,
+    image: "",
     description: "Large smart TV with 4K resolution",
     price: 799.0,
     stock: 15,
@@ -33,6 +41,8 @@ module.exports = [
   },
   {
     product_name: "Leather Wallet",
+    seller_id: 7,
+    image: "",
     description: "Classic leather wallet with multiple card slots",
     price: 49.99,
     stock: 30,
@@ -41,6 +51,8 @@ module.exports = [
   },
   {
     product_name: "Fitness Tracker",
+    seller_id: 9,
+    image: "",
     description: "Activity tracker with heart rate monitor",
     price: 59.99,
     stock: 60,
@@ -49,6 +61,8 @@ module.exports = [
   },
   {
     product_name: "Chef's Knife",
+    seller_id: 1,
+    image: "",
     description: "High-quality chef's knife for culinary enthusiasts",
     price: 89.5,
     stock: 25,
@@ -57,6 +71,8 @@ module.exports = [
   },
   {
     product_name: "Graphic T-Shirt",
+    seller_id: 3,
+    image: "",
     description: "Stylish graphic T-shirt with unique design",
     price: 29.99,
     stock: 70,
@@ -65,6 +81,8 @@ module.exports = [
   },
   {
     product_name: "Wireless Mouse",
+    seller_id: 5,
+    image: "",
     description: "Ergonomic wireless mouse for computer users",
     price: 39.99,
     stock: 40,
@@ -73,6 +91,8 @@ module.exports = [
   },
   {
     product_name: "Yoga Mat",
+    seller_id: 6,
+    image: "",
     description: "High-quality yoga mat for fitness and relaxation",
     price: 34.99,
     stock: 90,
