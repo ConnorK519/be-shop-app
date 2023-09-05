@@ -37,3 +37,14 @@ exports.patchUserLoginAttempts = (number, user_id) => {
     [number, user_id]
   );
 };
+
+exports.patchUserLockedTill = (date, user_id) => {
+  return db.query(
+    `
+  UPDATE users
+  SET locked_till = ?
+  WHERE user_id = ?
+  `,
+    [date, user_id]
+  );
+};
