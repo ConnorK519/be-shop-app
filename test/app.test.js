@@ -4,8 +4,7 @@ const seed = require("../db/seeds/seed");
 const app = require("../app");
 const data = require("../db/data/test-data/index");
 const chai = require("chai");
-const expect = chai.expect();
-const should = chai.should();
+const expect = chai.expect;
 const chaiHttp = require("chai-http");
 
 chai.use(chaiHttp);
@@ -18,7 +17,7 @@ after("all", () => db.end());
 
 describe("Users", () => {
   describe("POST /api/user/register", () => {
-    it("should successfully post a user to the database", (done) => {
+    it("should successfully post a user to the database and respond with a status 201 and the user data", async () => {
       chai
         .request(app)
         .post("/api/user/register")
@@ -35,22 +34,335 @@ describe("Users", () => {
         })
         .end((err, res) => {
           const userData = res.body.user;
-          res.should.have.status(201);
-          userData.should.have.property("user_id");
-          userData.should.have.property("username");
-          userData.should.have.property("first_name");
-          userData.should.have.property("last_name");
-          userData.should.have.property("email");
-          userData.should.have.property("post_code");
-          userData.should.have.property("town_or_city");
-          userData.should.have.property("house_number");
-          userData.should.have.property("street");
-          userData.should.have.property("basket");
-          userData.should.have.property("login_attempts");
-          userData.should.have.property("locked_till");
-          userData.should.have.property("created_at");
-          done();
+          expect(res).to.have.status(201);
+          expect(userData).to.have.property("user_id");
+          expect(userData).to.have.property("username");
+          expect(userData).to.have.property("first_name");
+          expect(userData).to.have.property("last_name");
+          expect(userData).to.have.property("email");
+          expect(userData).to.have.property("post_code");
+          expect(userData).to.have.property("town_or_city");
+          expect(userData).to.have.property("house_number");
+          expect(userData).to.have.property("street");
+          expect(userData).to.have.property("basket");
+          expect(userData).to.have.property("login_attempts");
+          expect(userData).to.have.property("locked_till");
+          expect(userData).to.have.property("created_at");
         });
+    });
+
+    it("should respond with a status 400 and an error message if passed invalid data", async () => {
+      chai
+        .request(app)
+        .post("/api/user/register")
+        .send({
+          username: "testuser123",
+          first_name: "Test",
+          last_name: "User",
+          email: "testuser123@",
+          password: "P@ssw0rd",
+          post_code: "12345",
+          town_or_city: "Testville",
+          house_number: "456",
+          street: "Sample Street",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Invalid email or password");
+        });
+
+      chai
+        .request(app)
+        .post("/api/user/register")
+        .send({
+          username: "testuser123",
+          first_name: "Test",
+          last_name: "User",
+          email: "testuser123@example.com",
+          password: "thisisabadpassword",
+          post_code: "12345",
+          town_or_city: "Testville",
+          house_number: "456",
+          street: "Sample Street",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Invalid email or password");
+        });
+    });
+
+    it("should respond with a status 400 and an error if missing a required field", async () => {
+      chai
+        .request(app)
+        .post("/api/user/register")
+        .send({
+          username: "testuser123",
+          first_name: "Test",
+          last_name: "User",
+          email: "testuser123@",
+          password: "P@ssw0rd",
+          post_code: "12345",
+          town_or_city: "Testville",
+          house_number: "456",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Missing a required input field");
+        });
+
+      chai
+        .request(app)
+        .post("/api/user/register")
+        .send({
+          username: "testuser123",
+          first_name: "Test",
+          last_name: "User",
+          email: "testuser123@",
+          password: "P@ssw0rd",
+          post_code: "12345",
+          town_or_city: "Testville",
+          street: "Sample Street",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Missing a required input field");
+        });
+
+      chai
+        .request(app)
+        .post("/api/user/register")
+        .send({
+          username: "testuser123",
+          first_name: "Test",
+          last_name: "User",
+          email: "testuser123@",
+          password: "P@ssw0rd",
+          post_code: "12345",
+          house_number: "456",
+          street: "Sample Street",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Missing a required input field");
+        });
+
+      chai
+        .request(app)
+        .post("/api/user/register")
+        .send({
+          username: "testuser123",
+          first_name: "Test",
+          last_name: "User",
+          email: "testuser123@",
+          password: "P@ssw0rd",
+          town_or_city: "Testville",
+          house_number: "456",
+          street: "Sample Street",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Missing a required input field");
+        });
+
+      chai
+        .request(app)
+        .post("/api/user/register")
+        .send({
+          username: "testuser123",
+          first_name: "Test",
+          last_name: "User",
+          email: "testuser123@",
+          post_code: "12345",
+          town_or_city: "Testville",
+          house_number: "456",
+          street: "Sample Street",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Missing a required input field");
+        });
+
+      chai
+        .request(app)
+        .post("/api/user/register")
+        .send({
+          username: "testuser123",
+          first_name: "Test",
+          last_name: "User",
+          password: "P@ssw0rd",
+          post_code: "12345",
+          town_or_city: "Testville",
+          house_number: "456",
+          street: "Sample Street",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Missing a required input field");
+        });
+
+      chai
+        .request(app)
+        .post("/api/user/register")
+        .send({
+          username: "testuser123",
+          first_name: "Test",
+          email: "testuser123@",
+          password: "P@ssw0rd",
+          post_code: "12345",
+          town_or_city: "Testville",
+          house_number: "456",
+          street: "Sample Street",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Missing a required input field");
+        });
+
+      chai
+        .request(app)
+        .post("/api/user/register")
+        .send({
+          username: "testuser123",
+          last_name: "User",
+          email: "testuser123@",
+          password: "P@ssw0rd",
+          post_code: "12345",
+          town_or_city: "Testville",
+          house_number: "456",
+          street: "Sample Street",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Missing a required input field");
+        });
+
+      chai
+        .request(app)
+        .post("/api/user/register")
+        .send({
+          first_name: "Test",
+          last_name: "User",
+          email: "testuser123@",
+          password: "P@ssw0rd",
+          post_code: "12345",
+          town_or_city: "Testville",
+          house_number: "456",
+          street: "Sample Street",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Missing a required input field");
+        });
+    });
+
+    it("should respond a status 409 and an error if a user already exists with an email or username", async () => {
+      chai
+        .request(app)
+        .post("/api/user/register")
+        .send({
+          username: "jalkin0",
+          first_name: "Jasen",
+          last_name: "Alkin",
+          email: "jalkin0@odnoklassniki.rd",
+          password: "yE4`h6|86#(",
+          post_code: "48942",
+          town_or_city: "Kranggan",
+          house_number: "93",
+          street: "Messerschmidt",
+          created_at: "2023/03/07",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(409);
+          expect(res.body.msg).to.equal("Username already in use");
+        });
+
+      chai
+        .request(app)
+        .post("/api/user/register")
+        .send({
+          username: "jalkin",
+          first_name: "Jasen",
+          last_name: "Alkin",
+          email: "jalkin0@odnoklassniki.ru",
+          password: "yE4`h6|86#(",
+          post_code: "48942",
+          town_or_city: "Kranggan",
+          house_number: "93",
+          street: "Messerschmidt",
+          created_at: "2023/03/07",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(409);
+          expect(res.body.msg).to.equal("Email already in use");
+        });
+    });
+  });
+
+  describe("POST /api/users/login", () => {
+    it("should respond with a status 200 and an object containing the users data if passed a matching email and password", async () => {
+      const res = await chai.request(app).post("/api/user/login").send({
+        email: "jalkin0@odnoklassniki.ru",
+        password: "yE4`h6|86#(",
+      });
+      const userData = res.body.user;
+      expect(res).to.have.status(200);
+      expect(userData).to.have.property("user_id");
+      expect(userData).to.have.property("username");
+      expect(userData).to.have.property("first_name");
+      expect(userData).to.have.property("last_name");
+      expect(userData).to.have.property("email");
+      expect(userData).to.have.property("post_code");
+      expect(userData).to.have.property("town_or_city");
+      expect(userData).to.have.property("house_number");
+      expect(userData).to.have.property("street");
+      expect(userData).to.have.property("basket");
+      expect(userData).to.have.property("login_attempts");
+      expect(userData).to.have.property("locked_till");
+      expect(userData).to.have.property("created_at");
+    });
+
+    it("should respond with a status 401 and an error message if passed an incorrect email or password", async () => {
+      const res1 = await chai.request(app).post("/api/user/login").send({
+        email: "jalkin0@odnoklassniki.ru",
+        password: "yE4`h6|86#",
+      });
+      expect(res1).to.have.status(401);
+      expect(res1.body.msg).to.equal("Invalid email or password");
+
+      const res2 = await chai.request(app).post("/api/user/login").send({
+        email: "jalkin0@odnoklassniki.r",
+        password: "yE4`h6|86#(",
+      });
+
+      expect(res2).to.have.status(401);
+      expect(res2.body.msg).to.equal("Invalid email or password");
+    });
+
+    it("should respond with a status 403 and an error message after the login attempt limit is exceeded and lock the account to future login attempt", async () => {
+      await chai.request(app).post("/api/user/login").send({
+        email: "jalkin0@odnoklassniki.ru",
+        password: "yE4`h6|86#",
+      });
+
+      await chai.request(app).post("/api/user/login").send({
+        email: "jalkin0@odnoklassniki.ru",
+        password: "yE4`h6|86#",
+      });
+
+      await chai.request(app).post("/api/user/login").send({
+        email: "jalkin0@odnoklassniki.ru",
+        password: "yE4`h6|86#",
+      });
+
+      const res = await chai.request(app).post("/api/user/login").send({
+        email: "jalkin0@odnoklassniki.ru",
+        password: "yE4`h6|86#(",
+      });
+
+      expect(res).to.have.status(403);
+      expect(res.body.msg).to.equal(
+        "This Account Is temporarily locked due to failed login attempts"
+      );
     });
   });
 });

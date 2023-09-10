@@ -27,6 +27,14 @@ exports.getUserByEmail = async (email) => {
   });
 };
 
+exports.getUserByUsername = async (username) => {
+  return db
+    .query(`SELECT * FROM users WHERE username = ?`, username)
+    .then((rows) => {
+      return rows[0][0];
+    });
+};
+
 exports.patchUserLoginAttempts = (number, user_id) => {
   return db.query(
     `
