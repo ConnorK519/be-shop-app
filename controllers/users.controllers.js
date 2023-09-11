@@ -6,9 +6,10 @@ const {
   getUserByUsername,
   patchUserLoginAttempts,
   patchUserLockedTill,
+  deleteUser,
 } = require("../models/users.models");
 
-exports.registerUser = async (req, res, next) => {
+exports.postNewUser = async (req, res, next) => {
   const currentDate = dayjs().format("YYYY-MM-DD");
   const {
     username,
@@ -80,40 +81,54 @@ exports.registerUser = async (req, res, next) => {
   }
 };
 
-exports.loginUser = async (req, res, next) => {
+exports.postUserLogin = async (req, res, next) => {
   const { email, password } = req.body;
 
-  try {
-    const user = await getUserByEmail(email);
-    const attemptLimit = 3;
-    const isLockedUser = user?.login_attempts >= attemptLimit;
-
-    if (user && user.login_attempts < attemptLimit) {
-      const isValidPassword = await bcrypt.compare(password, user.password);
-      if (isValidPassword) {
-        delete user.password;
-        await patchUserLoginAttempts(user.login_attempts, user.user_id);
-        res.status(200).send({ user });
-      } else {
-        if (user.login_attempts === attemptLimit - 1) {
-          const lockedTill = dayjs()
-            .add(15, "minute")
-            .format("YYYY-MM-DD HH-mm-ss");
-          await patchUserLockedTill(lockedTill, user.user_id);
+  if (email && password) {
+    try {
+      const user = await getUserByEmail(email);
+      const attemptLimit = 3;
+      const isLockedUser = user?.login_attempts >= attemptLimit;
+      if (user && user.login_attempts < attemptLimit) {
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (isValidPassword) {
+          delete user.password;
+          await patchUserLoginAttempts(user.login_attempts, user.user_id);
+          res.status(200).send({ user });
+        } else {
+          if (user.login_attempts === attemptLimit - 1) {
+            const lockedTill = dayjs()
+              .add(15, "minute")
+              .format("YYYY-MM-DD HH-mm-ss");
+            await patchUserLockedTill(lockedTill, user.user_id);
+          }
+          await patchUserLoginAttempts(1, user.user_id);
+          res.status(401).send({ msg: "Invalid email or password" });
         }
-        await patchUserLoginAttempts(1, user.user_id);
+      } else if (isLockedUser) {
+        res.status(403).send({
+          msg: "This Account Is temporarily locked due to failed login attempts",
+        });
+      } else {
         res.status(401).send({ msg: "Invalid email or password" });
       }
-    } else if (isLockedUser) {
-      res.status(403).send({
-        msg: "This Account Is temporarily locked due to failed login attempts",
-      });
-    } else {
-      res.status(401).send({ msg: "Invalid email or password" });
+    } catch (err) {
+      if (err) {
+        next(err);
+      }
     }
-  } catch (err) {
-    if (err) {
-      next(err);
-    }
+  } else if (email && !password) {
+    res.status(400).send({ msg: "Missing field Password" });
+  } else if (!email && password) {
+    res.status(400).send({ msg: "Missing field Email" });
   }
+};
+
+exports.deleteUserById = (req, res, next) => {
+  const { user_id } = req.params;
+  return deleteUser(user_id)
+    .then(() => {
+      res.status(204).send({ msg: "No Content" });
+    })
+    .catch(next);
 };

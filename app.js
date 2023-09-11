@@ -4,14 +4,20 @@ const {
   userLoginLimit,
 } = require("./middleware/rateLimiter");
 
-const { registerUser, loginUser } = require("./controllers/users.controllers");
+const {
+  postNewUser,
+  postUserLogin,
+  deleteUserById,
+} = require("./controllers/users.controllers");
 
 const app = express();
 
 app.use(express.json());
 
-app.post("/api/user/register", userRegisterLimit, registerUser);
+app.post("/api/user/register", userRegisterLimit, postNewUser);
 
-app.post("/api/user/login", userLoginLimit, loginUser);
+app.post("/api/user/login", userLoginLimit, postUserLogin);
+
+app.delete("/api/user/:user_id", deleteUserById);
 
 module.exports = app;

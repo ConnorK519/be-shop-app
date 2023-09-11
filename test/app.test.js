@@ -364,5 +364,20 @@ describe("Users", () => {
         "This Account Is temporarily locked due to failed login attempts"
       );
     });
+
+    it("should respond with a status 400 and an error message if a required field is missing", async () => {
+      const res1 = await chai.request(app).post("/api/user/login").send({
+        email: "jalkin0@odnoklassniki.ru",
+      });
+      expect(res1).to.have.status(400);
+      expect(res1.body.msg).to.equal("Missing field Password");
+
+      const res2 = await chai.request(app).post("/api/user/login").send({
+        password: "yE4`h6|86#(",
+      });
+
+      expect(res2).to.have.status(400);
+      expect(res2.body.msg).to.equal("Missing field Email");
+    });
   });
 });

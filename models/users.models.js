@@ -56,3 +56,7 @@ exports.patchUserLockedTill = (date, user_id) => {
     [date, user_id]
   );
 };
+
+exports.deleteUser = (user_id) => {
+  return db.query(`DELETE FROM users WHERE user_id = ?`, user_id);
+};
