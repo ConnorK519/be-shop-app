@@ -1,16 +1,16 @@
 const bcrypt = require("bcrypt");
 const dayjs = require("dayjs");
 const {
-  postUser,
-  getUserByEmail,
-  getUserByUsername,
+  insertUser,
+  selectUserByEmail,
+  selectUserByUsername,
   checkUserExistsWithId,
-  patchUserLoginAttempts,
-  patchUserLockedTill,
+  updateUserLoginAttempts,
+  updateUserLockedTill,
   deleteUser,
 } = require("../models/users.models");
 
-exports.postNewUser = async (req, res, next) => {
+exports.postUser = async (req, res, next) => {
   const currentDate = dayjs().format("YYYY-MM-DD");
   const {
     username,
@@ -25,8 +25,8 @@ exports.postNewUser = async (req, res, next) => {
     created_at = currentDate,
   } = req.body;
 
-  const usernameInUse = await getUserByUsername(username);
-  const emailInUse = await getUserByEmail(email);
+  const usernameInUse = await selectUserByUsername(username);
+  const emailInUse = await selectUserByEmail(email);
   const emailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/g;
   const passwordRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
 
@@ -48,7 +48,7 @@ exports.postNewUser = async (req, res, next) => {
       !usernameInUse
     ) {
       const hashedPass = bcrypt.hashSync(password, 10);
-      return postUser([
+      return insertUser([
         username,
         first_name,
         last_name,
@@ -62,7 +62,7 @@ exports.postNewUser = async (req, res, next) => {
         created_at,
       ])
         .then(() => {
-          return getUserByEmail(email);
+          return selectUserByEmail(email);
         })
         .then((user) => {
           delete user.password;
@@ -87,23 +87,23 @@ exports.postUserLogin = async (req, res, next) => {
 
   if (email && password) {
     try {
-      const user = await getUserByEmail(email);
+      const user = await selectUserByEmail(email);
       const attemptLimit = 3;
       const isLockedUser = user?.login_attempts >= attemptLimit;
       if (user && user.login_attempts < attemptLimit) {
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (isValidPassword) {
           delete user.password;
-          await patchUserLoginAttempts(user.login_attempts, user.user_id);
+          await updateUserLoginAttempts(user.login_attempts, user.user_id);
           res.status(200).send({ user });
         } else {
           if (user.login_attempts === attemptLimit - 1) {
             const lockedTill = dayjs()
               .add(15, "minute")
               .format("YYYY-MM-DD HH-mm-ss");
-            await patchUserLockedTill(lockedTill, user.user_id);
+            await updateUserLockedTill(lockedTill, user.user_id);
           }
-          await patchUserLoginAttempts(1, user.user_id);
+          await updateUserLoginAttempts(1, user.user_id);
           res.status(401).send({ msg: "Invalid email or password" });
         }
       } else if (isLockedUser) {

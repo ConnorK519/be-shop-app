@@ -36,7 +36,7 @@ const seed = ({ userData, productData }) => {
         product_id SERIAL PRIMARY KEY,
         seller_id INT REFERENCES users(user_id),
         image TEXT,
-        product_name VARCHAR(100) UNIQUE NOT NULL,
+        product_name VARCHAR(100) NOT NULL,
         description TEXT NOT NULL,
         price DECIMAL(6, 2) NOT NULL CHECK (price >= 0),
         stock INT NOT NULL CHECK (stock >= 0),
