@@ -380,4 +380,39 @@ describe("Users", () => {
       expect(res2.body.msg).to.equal("Missing field Email");
     });
   });
+
+  describe("DELETE /api/user/:user_id", () => {
+    it("should successfully delete a user then respond with a status 204", async () => {
+      const deleteRes = await chai.request(app).delete("/api/user/1");
+      expect(deleteRes).to.have.status(204);
+
+      const loginRes = await chai.request(app).post("/api/user/login").send({
+        email: "jalkin0@odnoklassniki.ru",
+        password: "yE4`h6|86#(",
+      });
+
+      expect(loginRes).to.have.status(401);
+      expect(loginRes.body.msg).to.equal("Invalid email or password");
+    });
+
+    it("should respond with a status 404 and an error message if passed an id that doesn't exist", async () => {
+      chai
+        .request(app)
+        .delete("/api/user/20")
+        .end((err, res) => {
+          expect(res).to.have.status(404);
+          expect(res.body.msg).to.equal("Not Found");
+        });
+    });
+
+    it("should respond with a status 400 and an error message if passed an invalid value", async () => {
+      chai
+        .request(app)
+        .delete("/api/user/potato")
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Bad Request");
+        });
+    });
+  });
 });

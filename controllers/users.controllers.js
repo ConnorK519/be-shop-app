@@ -4,6 +4,7 @@ const {
   postUser,
   getUserByEmail,
   getUserByUsername,
+  checkUserExistsWithId,
   patchUserLoginAttempts,
   patchUserLockedTill,
   deleteUser,
@@ -124,11 +125,18 @@ exports.postUserLogin = async (req, res, next) => {
   }
 };
 
-exports.deleteUserById = (req, res, next) => {
+exports.deleteUserById = async (req, res, next) => {
   const { user_id } = req.params;
-  return deleteUser(user_id)
-    .then(() => {
-      res.status(204).send({ msg: "No Content" });
-    })
-    .catch(next);
+
+  const check = await checkUserExistsWithId(user_id);
+
+  if (check) {
+    return deleteUser(user_id)
+      .then(() => {
+        res.status(204).send({ msg: "No Content" });
+      })
+      .catch(next);
+  } else {
+    res.status(404).send({ msg: "Not Found" });
+  }
 };

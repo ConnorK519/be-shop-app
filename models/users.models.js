@@ -35,6 +35,18 @@ exports.getUserByUsername = async (username) => {
     });
 };
 
+exports.checkUserExistsWithId = async (user_id) => {
+  return db
+    .query(`SELECT * FROM users WHERE user_id = ?`, user_id)
+    .then((rows) => {
+      if (rows[0][0]?.user_id) {
+        return rows[0][0];
+      } else {
+        return false;
+      }
+    });
+};
+
 exports.patchUserLoginAttempts = (number, user_id) => {
   return db.query(
     `
