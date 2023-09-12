@@ -128,15 +128,16 @@ exports.postUserLogin = async (req, res, next) => {
 exports.deleteUserById = async (req, res, next) => {
   const { user_id } = req.params;
 
-  const check = await checkUserExistsWithId(user_id);
-
-  if (check) {
-    return deleteUser(user_id)
-      .then(() => {
-        res.status(204).send({ msg: "No Content" });
-      })
-      .catch(next);
-  } else {
-    res.status(404).send({ msg: "Not Found" });
+  if (!isNaN(user_id)) {
+    const check = await checkUserExistsWithId(user_id);
+    if (check) {
+      return deleteUser(user_id)
+        .then(() => {
+          res.status(204).send({ msg: "No Content" });
+        })
+        .catch(next);
+    } else {
+      res.status(404).send({ msg: "Not Found" });
+    }
   }
 };
