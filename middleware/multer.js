@@ -9,4 +9,16 @@ const productImgStorage = multer.diskStorage({
   },
 });
 
-exports.uploadProductImg = multer({ storage: productImgStorage });
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.split("/")[0] === "image") {
+    cb(null, true);
+  } else {
+    cb(new Error("Incorrect File Type"), false);
+  }
+};
+
+exports.uploadProductImg = multer({
+  storage: productImgStorage,
+  fileFilter,
+  limits: { fileSize: 1000000, files: 1 },
+});
