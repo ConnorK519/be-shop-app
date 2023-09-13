@@ -1,8 +1,11 @@
 const express = require("express");
+
 const {
   userRegisterLimit,
   userLoginLimit,
 } = require("./middleware/rateLimiter");
+
+const { uploadProductImg } = require("./middleware/multer");
 
 const {
   postUser,
@@ -30,6 +33,6 @@ app.get("/api/products", getProducts);
 
 app.get("/api/product/:product_id", getProductById);
 
-app.post("/api/products", postProduct);
+app.post("/api/products", uploadProductImg, postProduct);
 
 module.exports = app;

@@ -1,3 +1,5 @@
+const dayjs = require("dayjs");
+
 const {
   selectProducts,
   selectProductById,
@@ -20,16 +22,18 @@ exports.getProductById = async (req, res, next) => {
 };
 
 exports.postProduct = async (req, res, next) => {
+  const currentDate = dayjs().format("YYYY-MM-DD");
   const {
     seller_id,
-    image,
+    image = req.file.path,
     product_name,
     description,
     price,
     stock,
     category,
-    created_at,
+    created_at = currentDate,
   } = req.body;
+
   return insertProduct([
     seller_id,
     image,
