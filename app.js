@@ -33,6 +33,6 @@ app.get("/api/products", getProducts);
 
 app.get("/api/product/:product_id", getProductById);
 
-app.post("/api/products", uploadProductImg, postProduct);
+app.post("/api/products", uploadProductImg.single("image"), postProduct);
 
 module.exports = app;
