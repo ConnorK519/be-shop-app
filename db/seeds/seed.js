@@ -34,7 +34,7 @@ const seed = ({ userData, productData }) => {
     .then(() => {
       return db.query(`CREATE TABLE products (
         product_id SERIAL PRIMARY KEY,
-        seller_id INT REFERENCES users(user_id),
+        seller_id INT REFERENCES users(user_id) ON DELETE SET NULL,
         image TEXT,
         product_name VARCHAR(100) NOT NULL,
         description TEXT NOT NULL,
@@ -47,7 +47,7 @@ const seed = ({ userData, productData }) => {
     .then(() => {
       return db.query(`CREATE TABLE orders (
         order_id SERIAL PRIMARY KEY,
-        user_id INT REFERENCES users(user_id),
+        user_id INT REFERENCES users(user_id) ON DELETE SET NULL,
         order_date DATE,
         total_amount DECIMAL(6, 2) NOT NULL,
         status VARCHAR(20)

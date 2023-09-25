@@ -1,4 +1,5 @@
 const dayjs = require("dayjs");
+const { storageClient, bucketName } = require("../middleware/multer");
 
 const {
   selectProducts,
@@ -25,7 +26,6 @@ exports.postProduct = async (req, res, next) => {
   const currentDate = dayjs().format("YYYY-MM-DD");
   const {
     seller_id,
-    image = req.file.path,
     product_name,
     description,
     price,
@@ -33,17 +33,52 @@ exports.postProduct = async (req, res, next) => {
     category,
     created_at = currentDate,
   } = req.body;
+  if (
+    seller_id &&
+    product_name &&
+    description &&
+    price &&
+    stock &&
+    category &&
+    req.file
+  ) {
+    const fileName = `${product_name}-${Date.now()}-${seller_id}`;
+    const blob = storageClient.bucket("shop-app-portfolio").file(fileName);
 
-  return insertProduct([
-    seller_id,
-    image,
-    product_name,
-    description,
-    price,
-    stock,
-    category,
-    created_at,
-  ]).then(() => {
-    res.status(201).send({ msg: "product posted" });
-  });
+    const stream = blob.createWriteStream({
+      metadata: {
+        contentType: req.file.mimetype,
+      },
+    });
+
+    stream.on("error", (err) => {
+      console.error(err);
+      return res
+        .status(500)
+        .send("Error uploading image to Google Cloud Storage.");
+    });
+
+    stream.on("finish", () => {
+      console.log("Image Posted Successfully");
+    });
+
+    stream.end(req.file.buffer);
+
+    const image_URL = `https://storage.googleapis.com/${bucketName}/${fileName}`;
+
+    return insertProduct([
+      seller_id,
+      image_URL,
+      product_name,
+      description,
+      price,
+      stock,
+      category,
+      created_at,
+    ]).then(() => {
+      res.status(201).send({ msg: "product posted" });
+    });
+  } else {
+    res.status(400).json({ message: "Missing required field" });
+  }
 };

@@ -22,7 +22,6 @@ exports.postUser = async (req, res, next) => {
     town_or_city,
     house_number,
     street,
-    created_at = currentDate,
   } = req.body;
 
   const usernameInUse = await selectUserByUsername(username);
@@ -59,7 +58,7 @@ exports.postUser = async (req, res, next) => {
         house_number,
         street,
         "{}",
-        created_at,
+        currentDate,
       ])
         .then(() => {
           return selectUserByEmail(email);
@@ -88,13 +87,24 @@ exports.postUserLogin = async (req, res, next) => {
   if (email && password) {
     try {
       const user = await selectUserByEmail(email);
+      const lockCheck = dayjs().format("YYYY-MM-DD HH-mm-ss");
+      const lock = dayjs(user.locked_till).format("YYYY-MM-DD HH-mm-ss");
+
+      if (user && user.locked_till && lock < lockCheck) {
+        await updateUserLoginAttempts(-user.login_attempts, user.user_id);
+        await updateUserLockedTill(null, user.user_id);
+        user.login_attempts = 0;
+        user.locked_till = null;
+      }
       const attemptLimit = 3;
       const isLockedUser = user?.login_attempts >= attemptLimit;
       if (user && user.login_attempts < attemptLimit) {
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (isValidPassword) {
           delete user.password;
-          await updateUserLoginAttempts(user.login_attempts, user.user_id);
+          await updateUserLoginAttempts(-user.login_attempts, user.user_id);
+          user.login_attempts = 0;
+          user.basket = JSON.parse(user.basket);
           res.status(200).send({ user });
         } else {
           if (user.login_attempts === attemptLimit - 1) {

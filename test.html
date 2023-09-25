@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Upload Test</title>
+  </head>
+  <body>
+    <h1>Product Upload Test</h1>
+    <form
+      action="/your-upload-endpoint-url"
+      method="POST"
+      enctype="multipart/form-data"
+      id="productForm"
+    >
+      <label for="seller_id">Seller ID:</label>
+      <input type="text" name="seller_id" required /><br />
+
+      <label for="product_name">Product Name:</label>
+      <input type="text" name="product_name" required /><br />
+
+      <label for="description">Description:</label>
+      <textarea name="description" rows="4" required></textarea><br />
+
+      <label for="price">Price:</label>
+      <input type="number" name="price" step="0.01" required /><br />
+
+      <label for="stock">Stock:</label>
+      <input type="number" name="stock" required /><br />
+
+      <label for="category">Category:</label>
+      <input type="text" name="category" required /><br />
+
+      <label for="image">Image:</label>
+      <input type="file" name="image" accept="image/*" required /><br />
+
+      <input type="submit" value="Upload Product" />
+    </form>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const productForm = document.getElementById("productForm");
+
+        productForm.addEventListener("submit", function (event) {
+          event.preventDefault();
+          const formData = new FormData(productForm);
+          fetch("http://localhost:5050/api/products", {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log(data);
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        });
+      });
+    </script>
+  </body>
+</html>

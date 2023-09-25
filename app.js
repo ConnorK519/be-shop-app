@@ -1,11 +1,11 @@
 const express = require("express");
+const cors = require("cors");
+const { upload } = require("./middleware/multer");
 
 const {
   userRegisterLimit,
   userLoginLimit,
 } = require("./middleware/rateLimiter");
-
-const { uploadProductImg } = require("./middleware/multer");
 
 const {
   postUser,
@@ -21,6 +21,8 @@ const {
 
 const app = express();
 
+app.use(cors());
+
 app.use(express.json());
 
 app.post("/api/user/register", userRegisterLimit, postUser);
@@ -33,6 +35,6 @@ app.get("/api/products", getProducts);
 
 app.get("/api/product/:product_id", getProductById);
 
-app.post("/api/products", uploadProductImg.single("image"), postProduct);
+app.post("/api/products", upload.single("image"), postProduct);
 
 module.exports = app;
