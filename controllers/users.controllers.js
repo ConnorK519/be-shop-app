@@ -88,7 +88,7 @@ exports.postUserLogin = async (req, res, next) => {
     try {
       const user = await selectUserByEmail(email);
       const lockCheck = dayjs().format("YYYY-MM-DD HH-mm-ss");
-      const lock = dayjs(user.locked_till).format("YYYY-MM-DD HH-mm-ss");
+      const lock = dayjs(user?.locked_till).format("YYYY-MM-DD HH-mm-ss");
 
       if (user && user.locked_till && lock < lockCheck) {
         await updateUserLoginAttempts(-user.login_attempts, user.user_id);
