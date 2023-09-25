@@ -2,7 +2,7 @@ const db = require("../db/connection");
 
 exports.selectProducts = async () => {
   return db
-    .query(`SELECT product_name, image, price FROM products`)
+    .query(`SELECT product_name, image, price, seller_id FROM products`)
     .then((rows) => {
       return rows[0];
     });

@@ -33,15 +33,7 @@ exports.postProduct = async (req, res, next) => {
     category,
     created_at = currentDate,
   } = req.body;
-  if (
-    seller_id &&
-    product_name &&
-    description &&
-    price &&
-    stock &&
-    category &&
-    req.file
-  ) {
+  if (seller_id && product_name && description && price && stock && category) {
     const fileName = `${product_name}-${Date.now()}-${seller_id}`;
     const blob = storageClient.bucket("shop-app-portfolio").file(fileName);
 
