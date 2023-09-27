@@ -2,7 +2,10 @@ const db = require("../db/connection");
 
 exports.selectProducts = async () => {
   return db
-    .query(`SELECT product_name, image, price, seller_id FROM products`)
+    .query(
+      `SELECT product_name, image, price, seller_id FROM products
+    WHERE seller_id IS NOT NULL AND stock > 0`
+    )
     .then((rows) => {
       return rows[0];
     });

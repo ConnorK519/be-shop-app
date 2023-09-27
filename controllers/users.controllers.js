@@ -7,6 +7,7 @@ const {
   checkUserExistsWithId,
   updateUserLoginAttempts,
   updateUserLockedTill,
+  updateUserById,
   deleteUser,
 } = require("../models/users.models");
 
@@ -137,10 +138,9 @@ exports.postUserLogin = async (req, res, next) => {
 
 exports.deleteUserById = async (req, res, next) => {
   const { user_id } = req.params;
-
   if (!isNaN(user_id)) {
-    const check = await checkUserExistsWithId(user_id);
-    if (check) {
+    const userExists = await checkUserExistsWithId(user_id);
+    if (userExists) {
       return deleteUser(user_id)
         .then(() => {
           res.status(204).send({ msg: "No Content" });
@@ -149,5 +149,27 @@ exports.deleteUserById = async (req, res, next) => {
     } else {
       res.status(404).send({ msg: "Not Found" });
     }
+  } else {
+    res.status(400).send({ msg: "Bad Request" });
+  }
+};
+
+exports.patchUserById = async (req, res, next) => {
+  const { user_id } = req.params;
+  const updatedUser = req.body;
+  try {
+    if (!isNaN(user_id)) {
+      const userExists = await checkUserExistsWithId(user_id);
+      if (userExists) {
+        await updateUserById(user_id, updatedUser);
+        res.status(200).send({ msg: "user updated" });
+      } else {
+        res.status(404).send({ msg: "Not Found" });
+      }
+    } else {
+      res.status(400).send({ msg: "Bad Request" });
+    }
+  } catch (err) {
+    next(err);
   }
 };

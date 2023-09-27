@@ -5,6 +5,7 @@ const {
   selectProducts,
   selectProductById,
   insertProduct,
+  updateProductSeller,
 } = require("../models/products.models");
 
 exports.getProducts = async (req, res, next) => {
@@ -47,7 +48,7 @@ exports.postProduct = async (req, res, next) => {
       console.error(err);
       return res
         .status(500)
-        .send("Error uploading image to Google Cloud Storage.");
+        .send({ msg: "Error uploading image to Google Cloud Storage." });
     });
 
     stream.on("finish", () => {
@@ -71,6 +72,6 @@ exports.postProduct = async (req, res, next) => {
       res.status(201).send({ msg: "product posted" });
     });
   } else {
-    res.status(400).json({ message: "Missing required field" });
+    res.status(400).send({ msg: "Missing required field" });
   }
 };
