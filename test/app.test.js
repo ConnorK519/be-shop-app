@@ -20,7 +20,7 @@ describe("Users", () => {
     it("should successfully post a user to the database and respond with a status 201 and the user data", async () => {
       chai
         .request(app)
-        .post("/api/user/register")
+        .post("/api/users/register")
         .send({
           username: "testuser123",
           first_name: "Test",
@@ -54,7 +54,7 @@ describe("Users", () => {
     it("should respond with a status 400 and an error message if passed invalid data", async () => {
       chai
         .request(app)
-        .post("/api/user/register")
+        .post("/api/users/register")
         .send({
           username: "testuser123",
           first_name: "Test",
@@ -73,7 +73,7 @@ describe("Users", () => {
 
       chai
         .request(app)
-        .post("/api/user/register")
+        .post("/api/users/register")
         .send({
           username: "testuser123",
           first_name: "Test",
@@ -94,7 +94,7 @@ describe("Users", () => {
     it("should respond with a status 400 and an error if missing a required field", async () => {
       chai
         .request(app)
-        .post("/api/user/register")
+        .post("/api/users/register")
         .send({
           username: "testuser123",
           first_name: "Test",
@@ -112,7 +112,7 @@ describe("Users", () => {
 
       chai
         .request(app)
-        .post("/api/user/register")
+        .post("/api/users/register")
         .send({
           username: "testuser123",
           first_name: "Test",
@@ -130,7 +130,7 @@ describe("Users", () => {
 
       chai
         .request(app)
-        .post("/api/user/register")
+        .post("/api/users/register")
         .send({
           username: "testuser123",
           first_name: "Test",
@@ -148,7 +148,7 @@ describe("Users", () => {
 
       chai
         .request(app)
-        .post("/api/user/register")
+        .post("/api/users/register")
         .send({
           username: "testuser123",
           first_name: "Test",
@@ -166,7 +166,7 @@ describe("Users", () => {
 
       chai
         .request(app)
-        .post("/api/user/register")
+        .post("/api/users/register")
         .send({
           username: "testuser123",
           first_name: "Test",
@@ -184,7 +184,7 @@ describe("Users", () => {
 
       chai
         .request(app)
-        .post("/api/user/register")
+        .post("/api/users/register")
         .send({
           username: "testuser123",
           first_name: "Test",
@@ -202,7 +202,7 @@ describe("Users", () => {
 
       chai
         .request(app)
-        .post("/api/user/register")
+        .post("/api/users/register")
         .send({
           username: "testuser123",
           first_name: "Test",
@@ -220,7 +220,7 @@ describe("Users", () => {
 
       chai
         .request(app)
-        .post("/api/user/register")
+        .post("/api/users/register")
         .send({
           username: "testuser123",
           last_name: "User",
@@ -238,7 +238,7 @@ describe("Users", () => {
 
       chai
         .request(app)
-        .post("/api/user/register")
+        .post("/api/users/register")
         .send({
           first_name: "Test",
           last_name: "User",
@@ -258,7 +258,7 @@ describe("Users", () => {
     it("should respond a status 409 and an error if a user already exists with an email or username", async () => {
       chai
         .request(app)
-        .post("/api/user/register")
+        .post("/api/users/register")
         .send({
           username: "jalkin0",
           first_name: "Jasen",
@@ -278,7 +278,7 @@ describe("Users", () => {
 
       chai
         .request(app)
-        .post("/api/user/register")
+        .post("/api/users/register")
         .send({
           username: "jalkin",
           first_name: "Jasen",
@@ -300,7 +300,7 @@ describe("Users", () => {
 
   describe("POST /api/users/login", () => {
     it("should respond with a status 200 and an object containing the users data if passed a matching email and password", async () => {
-      const res = await chai.request(app).post("/api/user/login").send({
+      const res = await chai.request(app).post("/api/users/login").send({
         email: "jalkin0@odnoklassniki.ru",
         password: "yE4`h6|86#(",
       });
@@ -322,14 +322,14 @@ describe("Users", () => {
     });
 
     it("should respond with a status 401 and an error message if passed an incorrect email or password", async () => {
-      const res1 = await chai.request(app).post("/api/user/login").send({
+      const res1 = await chai.request(app).post("/api/users/login").send({
         email: "jalkin0@odnoklassniki.ru",
         password: "yE4`h6|86#",
       });
       expect(res1).to.have.status(401);
       expect(res1.body.msg).to.equal("Invalid email or password");
 
-      const res2 = await chai.request(app).post("/api/user/login").send({
+      const res2 = await chai.request(app).post("/api/users/login").send({
         email: "jalkin0@odnoklassniki.r",
         password: "yE4`h6|86#(",
       });
@@ -339,22 +339,22 @@ describe("Users", () => {
     });
 
     it("should respond with a status 403 and an error message after the login attempt limit is exceeded and lock the account to future login attempt", async () => {
-      await chai.request(app).post("/api/user/login").send({
+      await chai.request(app).post("/api/users/login").send({
         email: "jalkin0@odnoklassniki.ru",
         password: "yE4`h6|86#",
       });
 
-      await chai.request(app).post("/api/user/login").send({
+      await chai.request(app).post("/api/users/login").send({
         email: "jalkin0@odnoklassniki.ru",
         password: "yE4`h6|86#",
       });
 
-      await chai.request(app).post("/api/user/login").send({
+      await chai.request(app).post("/api/users/login").send({
         email: "jalkin0@odnoklassniki.ru",
         password: "yE4`h6|86#",
       });
 
-      const res = await chai.request(app).post("/api/user/login").send({
+      const res = await chai.request(app).post("/api/users/login").send({
         email: "jalkin0@odnoklassniki.ru",
         password: "yE4`h6|86#(",
       });
@@ -366,13 +366,13 @@ describe("Users", () => {
     });
 
     it("should respond with a status 400 and an error message if a required field is missing", async () => {
-      const res1 = await chai.request(app).post("/api/user/login").send({
+      const res1 = await chai.request(app).post("/api/users/login").send({
         email: "jalkin0@odnoklassniki.ru",
       });
       expect(res1).to.have.status(400);
       expect(res1.body.msg).to.equal("Missing field Password");
 
-      const res2 = await chai.request(app).post("/api/user/login").send({
+      const res2 = await chai.request(app).post("/api/users/login").send({
         password: "yE4`h6|86#(",
       });
 
@@ -381,12 +381,12 @@ describe("Users", () => {
     });
   });
 
-  describe("DELETE /api/user/:user_id", () => {
+  describe("DELETE /api/users/:user_id", () => {
     it("should successfully delete a user then respond with a status 204", async () => {
-      const deleteRes = await chai.request(app).delete("/api/user/1");
+      const deleteRes = await chai.request(app).delete("/api/users/1");
       expect(deleteRes).to.have.status(204);
 
-      const loginRes = await chai.request(app).post("/api/user/login").send({
+      const loginRes = await chai.request(app).post("/api/users/login").send({
         email: "jalkin0@odnoklassniki.ru",
         password: "yE4`h6|86#(",
       });
@@ -398,7 +398,7 @@ describe("Users", () => {
     it("should respond with a status 404 and an error message if passed an id that doesn't exist", async () => {
       chai
         .request(app)
-        .delete("/api/user/20")
+        .delete("/api/users/20")
         .end((err, res) => {
           expect(res).to.have.status(404);
           expect(res.body.msg).to.equal("Not Found");
@@ -408,7 +408,7 @@ describe("Users", () => {
     it("should respond with a status 400 and an error message if passed an invalid value", async () => {
       chai
         .request(app)
-        .delete("/api/user/potato")
+        .delete("/api/users/potato")
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal("Bad Request");

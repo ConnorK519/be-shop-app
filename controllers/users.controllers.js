@@ -47,7 +47,7 @@ exports.postUser = async (req, res, next) => {
       !emailInUse &&
       !usernameInUse
     ) {
-      const hashedPass = bcrypt.hashSync(password, 10);
+      const hashedPass = await bcrypt.hash(password, 10);
       return insertUser([
         username,
         first_name,
@@ -136,24 +136,6 @@ exports.postUserLogin = async (req, res, next) => {
   }
 };
 
-exports.deleteUserById = async (req, res, next) => {
-  const { user_id } = req.params;
-  if (!isNaN(user_id)) {
-    const userExists = await checkUserExistsWithId(user_id);
-    if (userExists) {
-      return deleteUser(user_id)
-        .then(() => {
-          res.status(204).send({ msg: "No Content" });
-        })
-        .catch(next);
-    } else {
-      res.status(404).send({ msg: "Not Found" });
-    }
-  } else {
-    res.status(400).send({ msg: "Bad Request" });
-  }
-};
-
 exports.patchUserById = async (req, res, next) => {
   const { user_id } = req.params;
   const updatedUser = req.body;
@@ -171,5 +153,23 @@ exports.patchUserById = async (req, res, next) => {
     }
   } catch (err) {
     next(err);
+  }
+};
+
+exports.deleteUserById = async (req, res, next) => {
+  const { user_id } = req.params;
+  if (!isNaN(user_id)) {
+    const userExists = await checkUserExistsWithId(user_id);
+    if (userExists) {
+      return deleteUser(user_id)
+        .then(() => {
+          res.status(204).send({ msg: "No Content" });
+        })
+        .catch(next);
+    } else {
+      res.status(404).send({ msg: "Not Found" });
+    }
+  } else {
+    res.status(400).send({ msg: "Bad Request" });
   }
 };

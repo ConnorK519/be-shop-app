@@ -1,6 +1,9 @@
 const express = require("express");
 const cors = require("cors");
+
 const { upload } = require("./middleware/multer");
+
+const { handleCustomErrors } = require("./middleware/errorHandlers");
 
 const {
   userRegisterLimit,
@@ -39,5 +42,7 @@ app.get("/api/products/:product_id", getProductById);
 app.post("/api/products", upload.single("image"), postProduct);
 
 app.patch("/api/users/:user_id", patchUserById);
+
+app.use(handleCustomErrors);
 
 module.exports = app;

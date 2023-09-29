@@ -68,6 +68,7 @@ exports.updateUserLockedTill = (date, user_id) => {
     [date, user_id]
   );
 };
+
 exports.updateUserById = async (user_id, updatedUser) => {
   const validFields = {
     username: ["string", 15],
@@ -100,11 +101,17 @@ exports.updateUserById = async (user_id, updatedUser) => {
     .filter((field) => field !== undefined)
     .join(", ");
   values.push(user_id);
-  if (fieldsToUpdate && invalidFields.length === 0) {
+
+  if (invalidFields.length > 0) {
+    const errMsg = invalidFields.join(", ");
+    return Promise.reject({ status: 400, msg: `Invalid Fields: ${errMsg}` });
+  }
+
+  if (fieldsToUpdate.length > 0) {
     const query = `UPDATE users SET ${fieldsToUpdate} WHERE user_id = ?`;
     return db.query(query, values);
   } else {
-    return Promise.reject({ status: 400, msg: "Bad Request" });
+    return Promise.reject({ status: 400, msg: "No fields to update" });
   }
 };
 
