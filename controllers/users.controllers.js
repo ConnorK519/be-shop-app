@@ -24,61 +24,73 @@ exports.postUser = async (req, res, next) => {
     house_number,
     street,
   } = req.body;
-
-  const usernameInUse = await selectUserByUsername(username);
-  const emailInUse = await selectUserByEmail(email);
-  const emailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/g;
-  const passwordRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
-
-  if (
-    username &&
-    first_name &&
-    last_name &&
-    email &&
-    password &&
-    post_code &&
-    town_or_city &&
-    house_number &&
-    street
-  ) {
+  try {
     if (
-      emailRegex.test(email) &&
-      passwordRegex.test(password) &&
-      !emailInUse &&
-      !usernameInUse
+      !username ||
+      !first_name ||
+      !last_name ||
+      !email ||
+      !password ||
+      !post_code ||
+      !town_or_city ||
+      !house_number ||
+      !street
     ) {
-      const hashedPass = await bcrypt.hash(password, 10);
-      return insertUser([
-        username,
-        first_name,
-        last_name,
-        email,
-        hashedPass,
-        post_code,
-        town_or_city,
-        house_number,
-        street,
-        "{}",
-        currentDate,
-      ])
-        .then(() => {
-          return selectUserByEmail(email);
-        })
-        .then((user) => {
-          delete user.password;
-          user.basket = JSON.parse(user.basket);
-          res.status(201).send({ user });
-        })
-        .catch(next);
-    } else if (usernameInUse) {
-      res.status(409).send({ msg: "Username already in use" });
-    } else if (emailInUse) {
-      res.status(409).send({ msg: "Email already in use" });
-    } else {
-      res.status(400).send({ msg: "Invalid email or password" });
+      return Promise.reject({
+        status: 400,
+        msg: "Missing a required input field",
+      });
     }
-  } else {
-    res.status(400).send({ msg: "Missing a required input field" });
+
+    const usernameInUse = await selectUserByUsername(username);
+    const emailInUse = await selectUserByEmail(email);
+    const emailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/g;
+    const passwordRegex =
+      /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+
+    if (!emailRegex.test(email) || !passwordRegex.test(password)) {
+      let errMsg;
+      if (!emailRegex.test(email) && !passwordRegex.test(password)) {
+        errMsg = "Invalid email and password";
+      } else if (!emailRegex.test(email)) {
+        errMsg = "Invalid email";
+      } else {
+        errMsg = "Invalid password";
+      }
+      return Promise.reject({ status: 400, msg: errMsg });
+    }
+
+    if (usernameInUse || emailInUse) {
+      let errMsg;
+      if (usernameInUse) {
+        errMsg = "Username already in use";
+      } else {
+        errMsg = "Email already in use";
+      }
+      return Promise.reject({ status: 409, msg: errMsg });
+    }
+
+    const hashedPass = await bcrypt.hash(password, 10);
+    await insertUser([
+      username,
+      first_name,
+      last_name,
+      email,
+      hashedPass,
+      post_code,
+      town_or_city,
+      house_number,
+      street,
+      "{}",
+      currentDate,
+    ]);
+
+    const user = await selectUserByEmail(email);
+    delete user.password;
+    user.basket = JSON.parse(user.basket);
+    res.status(201).send({ user });
+  } catch (err) {
+    next(err);
   }
 };
 

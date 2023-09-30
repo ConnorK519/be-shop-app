@@ -255,7 +255,7 @@ describe("Users", () => {
         });
     });
 
-    it("should respond a status 409 and an error if a user already exists with an email or username", async () => {
+    it("should respond with a status 409 and an error if a user already exists with an email or username", async () => {
       chai
         .request(app)
         .post("/api/users/register")
