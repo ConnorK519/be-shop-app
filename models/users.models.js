@@ -21,13 +21,13 @@ exports.insertUser = async (newUser) => {
   );
 };
 
-exports.selectUserByEmail = async (email) => {
+exports.selectUserByEmail = async (email = "no email") => {
   return db.query(`SELECT * FROM users WHERE email = ?`, email).then((rows) => {
     return rows[0][0];
   });
 };
 
-exports.selectUserByUsername = async (username) => {
+exports.selectUserByUsername = async (username = "no username") => {
   return db
     .query(`SELECT * FROM users WHERE username = ?`, username)
     .then((rows) => {

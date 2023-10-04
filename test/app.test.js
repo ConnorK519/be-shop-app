@@ -13,7 +13,9 @@ beforeEach(() => {
   return seed(data);
 });
 
-after("all", () => db.end());
+after("all", () => {
+  db.end();
+});
 
 describe("Users", () => {
   describe("POST /api/user/register", () => {
@@ -51,7 +53,7 @@ describe("Users", () => {
         });
     });
 
-    it("should respond with a status 400 and an error message if passed invalid data", async () => {
+    it("should respond with a status 400 and an error message if passed an invalid email or password", async () => {
       chai
         .request(app)
         .post("/api/users/register")
@@ -68,7 +70,7 @@ describe("Users", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Invalid email or password");
+          expect(res.body.msg).to.equal("Invalid email");
         });
 
       chai
@@ -87,7 +89,26 @@ describe("Users", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Invalid email or password");
+          expect(res.body.msg).to.equal("Invalid password");
+        });
+
+      chai
+        .request(app)
+        .post("/api/users/register")
+        .send({
+          username: "testuser123",
+          first_name: "Test",
+          last_name: "User",
+          email: "testuser123@",
+          password: "thisisabadpassword",
+          post_code: "12345",
+          town_or_city: "Testville",
+          house_number: "456",
+          street: "Sample Street",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Invalid email and password");
         });
     });
 
@@ -99,7 +120,7 @@ describe("Users", () => {
           username: "testuser123",
           first_name: "Test",
           last_name: "User",
-          email: "testuser123@",
+          email: "testuser123@example.com",
           password: "P@ssw0rd",
           post_code: "12345",
           town_or_city: "Testville",
@@ -117,7 +138,7 @@ describe("Users", () => {
           username: "testuser123",
           first_name: "Test",
           last_name: "User",
-          email: "testuser123@",
+          email: "testuser123@example.com",
           password: "P@ssw0rd",
           post_code: "12345",
           town_or_city: "Testville",
@@ -135,7 +156,7 @@ describe("Users", () => {
           username: "testuser123",
           first_name: "Test",
           last_name: "User",
-          email: "testuser123@",
+          email: "testuser123@example.com",
           password: "P@ssw0rd",
           post_code: "12345",
           house_number: "456",
@@ -153,7 +174,7 @@ describe("Users", () => {
           username: "testuser123",
           first_name: "Test",
           last_name: "User",
-          email: "testuser123@",
+          email: "testuser123@example.com",
           password: "P@ssw0rd",
           town_or_city: "Testville",
           house_number: "456",
@@ -171,7 +192,7 @@ describe("Users", () => {
           username: "testuser123",
           first_name: "Test",
           last_name: "User",
-          email: "testuser123@",
+          email: "testuser123@example.com",
           post_code: "12345",
           town_or_city: "Testville",
           house_number: "456",
@@ -206,7 +227,7 @@ describe("Users", () => {
         .send({
           username: "testuser123",
           first_name: "Test",
-          email: "testuser123@",
+          email: "testuser123@example.com",
           password: "P@ssw0rd",
           post_code: "12345",
           town_or_city: "Testville",
@@ -224,7 +245,7 @@ describe("Users", () => {
         .send({
           username: "testuser123",
           last_name: "User",
-          email: "testuser123@",
+          email: "testuser123@example.com",
           password: "P@ssw0rd",
           post_code: "12345",
           town_or_city: "Testville",
@@ -242,7 +263,7 @@ describe("Users", () => {
         .send({
           first_name: "Test",
           last_name: "User",
-          email: "testuser123@",
+          email: "testuser123@example.com",
           password: "P@ssw0rd",
           post_code: "12345",
           town_or_city: "Testville",
@@ -252,6 +273,28 @@ describe("Users", () => {
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal("Missing a required input field");
+        });
+    });
+
+    it("should respond with a status 400 and an error message if passed data with invalid fields or values", async () => {
+      chai
+        .request(app)
+        .post("/api/users/register")
+        .send({
+          username: "testuser123",
+          first_name: "Test",
+          last_name: "User",
+          email: "testuser123@example.com",
+          password: "P@ssw0rd",
+          post_code: "12345",
+          town_or_city: "Testville",
+          house_number: "456",
+          street: "Sample Street",
+          invalidField: "Invalid",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Invalid fields invalidField");
         });
     });
 
@@ -269,7 +312,6 @@ describe("Users", () => {
           town_or_city: "Kranggan",
           house_number: "93",
           street: "Messerschmidt",
-          created_at: "2023/03/07",
         })
         .end((err, res) => {
           expect(res).to.have.status(409);
@@ -289,7 +331,6 @@ describe("Users", () => {
           town_or_city: "Kranggan",
           house_number: "93",
           street: "Messerschmidt",
-          created_at: "2023/03/07",
         })
         .end((err, res) => {
           expect(res).to.have.status(409);
