@@ -21,13 +21,19 @@ exports.insertUser = async (newUser) => {
   );
 };
 
-exports.selectUserByEmail = async (email = "no email") => {
+exports.selectUserByEmail = async (email) => {
+  if (!email) {
+    return false;
+  }
   return db.query(`SELECT * FROM users WHERE email = ?`, email).then((rows) => {
     return rows[0][0];
   });
 };
 
-exports.selectUserByUsername = async (username = "no username") => {
+exports.selectUserByUsername = async (username) => {
+  if (!username) {
+    return false;
+  }
   return db
     .query(`SELECT * FROM users WHERE username = ?`, username)
     .then((rows) => {
@@ -36,14 +42,13 @@ exports.selectUserByUsername = async (username = "no username") => {
 };
 
 exports.checkUserExistsWithId = async (user_id) => {
+  if (!user_id) {
+    return false;
+  }
   return db
     .query(`SELECT * FROM users WHERE user_id = ?`, user_id)
     .then((rows) => {
-      if (rows[0][0]?.user_id) {
-        return rows[0][0];
-      } else {
-        return false;
-      }
+      return rows[0][0];
     });
 };
 
@@ -51,7 +56,7 @@ exports.updateUserLoginAttempts = (number, user_id) => {
   return db.query(
     `
   UPDATE users
-  SET login_attempts = login_attempts + ?
+  SET login_attempts = ?
   WHERE user_id = ?
   `,
     [number, user_id]

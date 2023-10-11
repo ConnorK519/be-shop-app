@@ -137,169 +137,100 @@ exports.postUser = (req, res, next) => {
       user.basket = JSON.parse(user.basket);
       res.status(201).send({ user });
     })
-    .catch((err) => {
-      console.log(err);
-      next(err);
-    });
-
-  // try {
-  //   if (
-  //     !username ||
-  //     !first_name ||
-  //     !last_name ||
-  //     !email ||
-  //     !password ||
-  //     !post_code ||
-  //     !town_or_city ||
-  //     !house_number ||
-  //     !street
-  //   ) {
-  //     return Promise.reject({
-  //       status: 400,
-  //       msg: "Missing a required input field",
-  //     });
-  //   }
-
-  //   const validFields = {
-  //     username: ["string", 15],
-  //     first_name: ["string", 20],
-  //     last_name: ["string", 20],
-  //     post_code: ["string", 10],
-  //     town_or_city: ["string", 20],
-  //     house_number: ["number"],
-  //     street: ["string", 50],
-  //   };
-  //   const invalidFields = [];
-  //   const newUser = { ...req.body };
-  //   delete newUser.email;
-  //   delete newUser.password;
-
-  //   for (const key of Object.keys(newUser)) {
-  //     if (Object.keys(validFields).includes(key)) {
-  //       if (key === "house_number" && isNaN(newUser[key])) {
-  //         invalidFields.push(key);
-  //       } else if (
-  //         typeof newUser[key] !== validFields[key][0] &&
-  //         newUser[key].length > validFields[key][1]
-  //       ) {
-  //         invalidFields.push(key);
-  //       }
-  //     } else {
-  //       invalidFields.push(key);
-  //     }
-  //   }
-
-  //   if (invalidFields.length) {
-  //     const errMsg = `Invalid fields ${invalidFields.join(", ")}`;
-  //     return Promise.reject({ status: 400, msg: errMsg });
-  //   }
-
-  //   const emailRegex = /^[\w-]+(?:\.[\w-]+)*@(?:[\w-]+\.)+[a-zA-Z]{2,}$/;
-  //   const passwordRegex =
-  //     /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
-
-  //   if (!emailRegex.test(email) || !passwordRegex.test(password)) {
-  //     let errMsg;
-  //     if (!emailRegex.test(email) && !passwordRegex.test(password)) {
-  //       errMsg = "Invalid email and password";
-  //     } else if (!emailRegex.test(email)) {
-  //       errMsg = "Invalid email";
-  //     } else {
-  //       errMsg = "Invalid password";
-  //     }
-  //     return Promise.reject({ status: 400, msg: errMsg });
-  //   }
-
-  //   const usernameInUse = await selectUserByUsername(username);
-  //   const emailInUse = await selectUserByEmail(email);
-
-  //   if (usernameInUse || emailInUse) {
-  //     let errMsg;
-  //     if (usernameInUse) {
-  //       errMsg = "Username already in use";
-  //     } else {
-  //       errMsg = "Email already in use";
-  //     }
-  //     return Promise.reject({ status: 409, msg: errMsg });
-  //   }
-
-  //   const currentDate = dayjs().format("YYYY-MM-DD HH-mm-ss");
-  //   const hashedPass = await bcrypt.hash(password, 10);
-  //   await insertUser([
-  //     username,
-  //     first_name,
-  //     last_name,
-  //     email,
-  //     hashedPass,
-  //     post_code,
-  //     town_or_city,
-  //     house_number,
-  //     street,
-  //     "{}",
-  //     currentDate,
-  //   ]);
-
-  //   const user = await selectUserByEmail(email);
-  //   delete user.password;
-  //   user.basket = JSON.parse(user.basket);
-  //   res.status(201).send({ user });
-  // } catch (err) {
-  //   next(err);
-  // }
+    .catch(next);
 };
 
-exports.postUserLogin = async (req, res, next) => {
+exports.postUserLogin = (req, res, next) => {
   const { email, password } = req.body;
 
-  if (email && password) {
-    try {
-      const user = await selectUserByEmail(email);
-      const lockCheck = dayjs().format("YYYY-MM-DD HH-mm-ss");
-      const lock = dayjs(user?.locked_till).format("YYYY-MM-DD HH-mm-ss");
+  const loginAttemptLimit = 3;
 
-      if (user && user.locked_till && lock < lockCheck) {
-        await updateUserLoginAttempts(-user.login_attempts, user.user_id);
-        await updateUserLockedTill(null, user.user_id);
-        user.login_attempts = 0;
-        user.locked_till = null;
-      }
-      const attemptLimit = 3;
-      const isLockedUser = user?.login_attempts >= attemptLimit;
-      if (user && user.login_attempts < attemptLimit) {
-        const isValidPassword = await bcrypt.compare(password, user.password);
-        if (isValidPassword) {
-          delete user.password;
-          await updateUserLoginAttempts(-user.login_attempts, user.user_id);
-          user.login_attempts = 0;
-          user.basket = JSON.parse(user.basket);
-          res.status(200).send({ user });
+  return selectUserByEmail(email)
+    .then((user) => {
+      if (!email || !password) {
+        let errMsg = "Missing field";
+        if (!email && !password) {
+          errMsg += "s email and password";
+        } else if (!email) {
+          errMsg += ` email`;
         } else {
-          if (user.login_attempts === attemptLimit - 1) {
-            const lockedTill = dayjs()
-              .add(15, "minute")
-              .format("YYYY-MM-DD HH-mm-ss");
-            await updateUserLockedTill(lockedTill, user.user_id);
-          }
-          await updateUserLoginAttempts(1, user.user_id);
-          res.status(401).send({ msg: "Invalid email or password" });
+          errMsg += ` password`;
         }
-      } else if (isLockedUser) {
-        res.status(403).send({
-          msg: "This Account Is temporarily locked due to failed login attempts",
+        return Promise.reject({ status: 400, msg: errMsg });
+      }
+
+      if (!user) {
+        return Promise.reject({
+          status: 400,
+          msg: "Invalid email or password",
+        });
+      }
+
+      const promises = [bcrypt.compare(password, user.password), user];
+
+      if (user.locked_till) {
+        const currentTimestamp = dayjs().format("YYYY-MM-DD HH-mm-ss");
+        const lockedTillTimestamp = dayjs(user.locked_till).format(
+          "YYYY-MM-DD HH-mm-ss"
+        );
+        if (currentTimestamp > lockedTillTimestamp) {
+          promises.push(updateUserLoginAttempts(0, user.user_id));
+          promises.push(updateUserLockedTill(null, user.user_id));
+          user.login_attempts = 0;
+          user.locked_till = null;
+        } else {
+          return Promise.reject({
+            status: 403,
+            msg: "This Account Is temporarily locked due to failed login attempts",
+          });
+        }
+      }
+      return Promise.all(promises);
+    })
+    .then(([correctPassword, user]) => {
+      const userLoginResponse = [user];
+      if (correctPassword) {
+        if (user.login_attempts) {
+          userLoginResponse.push(0, updateUserLoginAttempts(0, user.user_id));
+        }
+        userLoginResponse.push(0, null);
+        return userLoginResponse;
+      } else {
+        const attemptIncrease = 1;
+        const newAttemptCount = user.login_attempts + attemptIncrease;
+        userLoginResponse.push(
+          newAttemptCount,
+          updateUserLoginAttempts(newAttemptCount, user.user_id)
+        );
+        if (newAttemptCount >= loginAttemptLimit) {
+          const lockTill = dayjs()
+            .add(15, "minute")
+            .format("YYYY-MM-DD HH-mm-ss");
+          userLoginResponse.push(updateUserLockedTill(lockTill, user.user_id));
+        }
+      }
+      return Promise.all(userLoginResponse);
+    })
+    .then(([user, failedAttempts]) => {
+      if (failedAttempts) {
+        if (failedAttempts >= loginAttemptLimit) {
+          return Promise.reject({
+            status: 403,
+            msg: "This Account has been temporarily locked due to failed login attempts",
+          });
+        }
+        return Promise.reject({
+          status: 400,
+          msg: "Invalid email or password",
         });
       } else {
-        res.status(401).send({ msg: "Invalid email or password" });
+        delete user.password;
+        user.login_attempts = 0;
+        user.basket = JSON.parse(user.basket);
+        res.status(200).send({ user });
       }
-    } catch (err) {
-      if (err) {
-        next(err);
-      }
-    }
-  } else if (email && !password) {
-    res.status(400).send({ msg: "Missing field Password" });
-  } else if (!email && password) {
-    res.status(400).send({ msg: "Missing field Email" });
-  }
+    })
+    .catch(next);
 };
 
 exports.patchUserById = async (req, res, next) => {
