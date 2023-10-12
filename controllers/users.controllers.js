@@ -24,7 +24,7 @@ exports.postUser = (req, res, next) => {
     street,
   } = req.body;
 
-  const login = new Promise((resolve, reject) => {
+  const register = new Promise((resolve, reject) => {
     if (
       username &&
       first_name &&
@@ -60,14 +60,18 @@ exports.postUser = (req, res, next) => {
           missingFields.push(formattedField);
         }
       }
+      let errMsg = "Missing a required input field";
+      if (missingFields.length > 1) {
+        errMsg += "s";
+      }
       reject({
         status: 400,
-        msg: `Missing a required input field ${missingFields.join(", ")}`,
+        msg: `${errMsg} ${missingFields.join(", ")}`,
       });
     }
   });
 
-  login
+  register
     .then(([emailInUse, usernameInUse]) => {
       if (usernameInUse || emailInUse) {
         let errMsg;
@@ -125,8 +129,14 @@ exports.postUser = (req, res, next) => {
       }
 
       if (invalidFields.length) {
-        const errMsg = `Invalid fields ${invalidFields.join(", ")}`;
-        return Promise.reject({ status: 400, msg: errMsg });
+        let errMsg = `Invalid field`;
+        if (invalidFields.length > 1) {
+          errMsg += "s";
+        }
+        return Promise.reject({
+          status: 400,
+          msg: `${errMsg} ${invalidFields.join(", ")}`,
+        });
       }
 
       return bcrypt.hash(password, 10);
@@ -163,20 +173,24 @@ exports.postUserLogin = (req, res, next) => {
 
   const loginAttemptLimit = 3;
 
-  return selectUserByEmail(email)
-    .then((user) => {
-      if (!email || !password) {
-        let errMsg = "Missing field";
-        if (!email && !password) {
-          errMsg += "s email and password";
-        } else if (!email) {
-          errMsg += ` email`;
-        } else {
-          errMsg += ` password`;
-        }
-        return Promise.reject({ status: 400, msg: errMsg });
+  const login = new Promise((resolve, reject) => {
+    if (email && password) {
+      resolve(selectUserByEmail(email));
+    } else {
+      let errMsg = "Missing field";
+      if (!email && !password) {
+        errMsg += "s email and password";
+      } else if (!email) {
+        errMsg += ` email`;
+      } else {
+        errMsg += ` password`;
       }
+      reject({ status: 400, msg: errMsg });
+    }
+  });
 
+  login
+    .then((user) => {
       if (!user) {
         return Promise.reject({
           status: 400,

@@ -314,7 +314,7 @@ describe("User", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Invalid fields invalidField");
+          expect(res.body.msg).to.equal("Invalid field invalidField");
         });
 
       chai
