@@ -131,7 +131,9 @@ describe("User", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Missing a required input field");
+          expect(res.body.msg).to.equal(
+            "Missing a required input field street"
+          );
         });
 
       chai
@@ -149,7 +151,9 @@ describe("User", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Missing a required input field");
+          expect(res.body.msg).to.equal(
+            "Missing a required input field house number"
+          );
         });
 
       chai
@@ -167,7 +171,9 @@ describe("User", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Missing a required input field");
+          expect(res.body.msg).to.equal(
+            "Missing a required input field town or city"
+          );
         });
 
       chai
@@ -185,7 +191,9 @@ describe("User", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Missing a required input field");
+          expect(res.body.msg).to.equal(
+            "Missing a required input field post code"
+          );
         });
 
       chai
@@ -203,7 +211,9 @@ describe("User", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Missing a required input field");
+          expect(res.body.msg).to.equal(
+            "Missing a required input field password"
+          );
         });
 
       chai
@@ -221,7 +231,7 @@ describe("User", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Missing a required input field");
+          expect(res.body.msg).to.equal("Missing a required input field email");
         });
 
       chai
@@ -239,7 +249,9 @@ describe("User", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Missing a required input field");
+          expect(res.body.msg).to.equal(
+            "Missing a required input field last name"
+          );
         });
 
       chai
@@ -257,7 +269,9 @@ describe("User", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Missing a required input field");
+          expect(res.body.msg).to.equal(
+            "Missing a required input field first name"
+          );
         });
 
       chai
@@ -275,7 +289,9 @@ describe("User", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Missing a required input field");
+          expect(res.body.msg).to.equal(
+            "Missing a required input field username"
+          );
           done();
         });
     });

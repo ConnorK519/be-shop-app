@@ -24,33 +24,51 @@ exports.postUser = (req, res, next) => {
     street,
   } = req.body;
 
-  let hasAllFields = false;
-
-  if (
-    username &&
-    first_name &&
-    last_name &&
-    email &&
-    password &&
-    post_code &&
-    town_or_city &&
-    house_number &&
-    street
-  ) {
-    hasAllFields = true;
-  }
-
-  const promises = [selectUserByEmail(email), selectUserByUsername(username)];
-
-  return Promise.all(promises)
-    .then(([emailInUse, usernameInUse]) => {
-      if (!hasAllFields) {
-        return Promise.reject({
-          status: 400,
-          msg: "Missing a required input field",
-        });
+  const login = new Promise((resolve, reject) => {
+    if (
+      username &&
+      first_name &&
+      last_name &&
+      email &&
+      password &&
+      post_code &&
+      town_or_city &&
+      house_number &&
+      street
+    ) {
+      const fieldsInUse = [
+        selectUserByEmail(email),
+        selectUserByUsername(username),
+      ];
+      resolve(Promise.all(fieldsInUse));
+    } else {
+      const missingFields = [];
+      const allFields = [
+        "username",
+        "first_name",
+        "last_name",
+        "email",
+        "password",
+        "post_code",
+        "town_or_city",
+        "house_number",
+        "street",
+      ];
+      for (const field of allFields) {
+        if (!Object.keys(req.body).includes(field)) {
+          const formattedField = field.split("_").join(" ");
+          missingFields.push(formattedField);
+        }
       }
+      reject({
+        status: 400,
+        msg: `Missing a required input field ${missingFields.join(", ")}`,
+      });
+    }
+  });
 
+  login
+    .then(([emailInUse, usernameInUse]) => {
       if (usernameInUse || emailInUse) {
         let errMsg;
         if (usernameInUse) {
