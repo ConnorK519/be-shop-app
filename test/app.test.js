@@ -9,8 +9,6 @@ const chaiHttp = require("chai-http");
 
 chai.use(chaiHttp);
 
-const requester = chai.request(app).keepOpen();
-
 after("all", () => {
   db.end();
 });
