@@ -198,7 +198,10 @@ exports.postUserLogin = (req, res, next) => {
         });
       }
 
-      const promises = [bcrypt.compare(password, user.password), user];
+      return Promise.all([bcrypt.compare(password, user.password), user]);
+    })
+    .then(([correctPassword, user]) => {
+      const userLoginResponse = [user];
 
       if (user.locked_till) {
         const currentTimestamp = dayjs().format("YYYY-MM-DD HH-mm-ss");
@@ -206,8 +209,8 @@ exports.postUserLogin = (req, res, next) => {
           "YYYY-MM-DD HH-mm-ss"
         );
         if (currentTimestamp > lockedTillTimestamp) {
-          promises.push(updateUserLoginAttempts(0, user.user_id));
-          promises.push(updateUserLockedTill(null, user.user_id));
+          userLoginResponse.push(updateUserLoginAttempts(0, user.user_id));
+          userLoginResponse.push(updateUserLockedTill(null, user.user_id));
           user.login_attempts = 0;
           user.locked_till = null;
         } else {
@@ -217,10 +220,7 @@ exports.postUserLogin = (req, res, next) => {
           });
         }
       }
-      return Promise.all(promises);
-    })
-    .then(([correctPassword, user]) => {
-      const userLoginResponse = [user];
+
       if (correctPassword) {
         if (user.login_attempts) {
           userLoginResponse.push(0, updateUserLoginAttempts(0, user.user_id));
@@ -268,21 +268,26 @@ exports.postUserLogin = (req, res, next) => {
 exports.patchUserById = async (req, res, next) => {
   const { user_id } = req.params;
   const updatedUser = req.body;
-  try {
+
+  const updateUser = new Promise((resolve, reject) => {
     if (!isNaN(user_id)) {
-      const userExists = await checkUserExistsWithId(user_id);
-      if (userExists) {
-        await updateUserById(user_id, updatedUser);
-        res.status(200).send({ msg: "user updated" });
-      } else {
-        res.status(404).send({ msg: "Not Found" });
-      }
+      resolve(checkUserExistsWithId(user_id));
     } else {
-      res.status(400).send({ msg: "Bad Request" });
+      reject({ status: 400, msg: "Invalid user id" });
     }
-  } catch (err) {
-    next(err);
-  }
+  });
+
+  updateUser
+    .then((userExists) => {
+      if (!userExists) {
+        return Promise.reject({ status: 404, msg: "No user found" });
+      }
+      return updateUserById(user_id, updatedUser);
+    })
+    .then(() => {
+      res.status(200).send({ msg: "User updated" });
+    })
+    .catch(next);
 };
 
 exports.deleteUserById = async (req, res, next) => {

@@ -76,13 +76,13 @@ exports.updateUserLockedTill = (date, user_id) => {
 
 exports.updateUserById = async (user_id, updatedUser) => {
   const validFields = {
-    username: ["string", 15],
-    first_name: ["string", 20],
-    last_name: ["string", 20],
-    post_code: ["string", 10],
-    town_or_city: ["string", 20],
+    username: ["string", 5, 15],
+    first_name: ["string", 1, 20],
+    last_name: ["string", 1, 20],
+    post_code: ["string", 3, 10],
+    town_or_city: ["string", 3, 20],
     house_number: ["number"],
-    street: ["string", 50],
+    street: ["string", 5, 50],
   };
   const values = [];
   const invalidFields = [];
@@ -91,7 +91,8 @@ exports.updateUserById = async (user_id, updatedUser) => {
       if (Object.keys(validFields).includes(key)) {
         if (
           typeof updatedUser[key] === validFields[key][0] &&
-          updatedUser[key].length <= validFields[key][1]
+          updatedUser[key].length >= validFields[key][1] &&
+          updatedUser[key].length <= validFields[key][2]
         ) {
           values.push(updatedUser[key]);
           return `${key} = ?`;
@@ -101,6 +102,8 @@ exports.updateUserById = async (user_id, updatedUser) => {
         } else {
           invalidFields.push(key);
         }
+      } else {
+        invalidFields.push(key);
       }
     })
     .filter((field) => field !== undefined)
@@ -108,15 +111,27 @@ exports.updateUserById = async (user_id, updatedUser) => {
   values.push(user_id);
 
   if (invalidFields.length > 0) {
-    const errMsg = invalidFields.join(", ");
-    return Promise.reject({ status: 400, msg: `Invalid Fields: ${errMsg}` });
+    let errMsg = "Invalid field";
+    const formattedInvalidFields = invalidFields.map((field) => {
+      return field.split("_").join(" ");
+    });
+    if (invalidFields.length > 1) {
+      errMsg += "s";
+    }
+    return Promise.reject({
+      status: 400,
+      msg: `${errMsg} ${formattedInvalidFields.join(", ")}`,
+    });
   }
 
   if (fieldsToUpdate.length > 0) {
     const query = `UPDATE users SET ${fieldsToUpdate} WHERE user_id = ?`;
     return db.query(query, values);
   } else {
-    return Promise.reject({ status: 400, msg: "No fields to update" });
+    return Promise.reject({
+      status: 400,
+      msg: "No valid fields found to update",
+    });
   }
 };
 

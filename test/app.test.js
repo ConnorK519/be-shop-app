@@ -502,6 +502,71 @@ describe("User", () => {
     });
   });
 
+  describe("PATCH /api/user/:user_id", () => {
+    beforeEach(() => {
+      return seed(data);
+    });
+    it("should respond with a status 200 and a msg after successfully updating a user", (done) => {
+      chai
+        .request(app)
+        .patch("/api/users/1")
+        .send({ username: "newUsername" })
+        .end((err, res) => {
+          expect(res).to.have.status(200);
+          expect(res.body.msg).to.equal("User updated");
+          done();
+        });
+    });
+
+    it("should respond with a status 400 and an error message if passed bad fields", (done) => {
+      chai
+        .request(app)
+        .patch("/api/users/1")
+        .send({ bad_field: "this field should cause an error" })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Invalid field bad field");
+          done();
+        });
+    });
+
+    it("should respond with a status 400 and an error message when passed an invalid id type", (done) => {
+      chai
+        .request(app)
+        .patch("/api/users/userID")
+        .send({ username: "newUsername" })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Invalid user id");
+          done();
+        });
+    });
+
+    it("should respond with a status 400 and an error message if passed an empty object", (done) => {
+      chai
+        .request(app)
+        .patch("/api/users/1")
+        .send({})
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("No valid fields found to update");
+          done();
+        });
+    });
+
+    it("should respond with a status 404 and an error message when passed an user id that doesn't exist", (done) => {
+      chai
+        .request(app)
+        .patch("/api/users/99")
+        .send({ username: "newUsername" })
+        .end((err, res) => {
+          expect(res).to.have.status(404);
+          expect(res.body.msg).to.equal("No user found");
+          done();
+        });
+    });
+  });
+
   //   describe("DELETE /api/users/:user_id", () => {
   //     it("should successfully delete a user then respond with a status 204", async () => {
   //       const deleteRes = await chai.request(app).delete("/api/users/1");
