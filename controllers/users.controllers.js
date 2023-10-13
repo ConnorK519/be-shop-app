@@ -198,10 +198,10 @@ exports.postUserLogin = (req, res, next) => {
         });
       }
 
-      return Promise.all([bcrypt.compare(password, user.password), user]);
+      return Promise.all([user, bcrypt.compare(password, user.password)]);
     })
-    .then(([correctPassword, user]) => {
-      const userLoginResponse = [user];
+    .then(([user, correctPassword]) => {
+      const userLoginResponse = [user, correctPassword];
 
       if (user.locked_till) {
         const currentTimestamp = dayjs().format("YYYY-MM-DD HH-mm-ss");
@@ -243,8 +243,8 @@ exports.postUserLogin = (req, res, next) => {
       }
       return Promise.all(userLoginResponse);
     })
-    .then(([user, failedAttempts]) => {
-      if (failedAttempts) {
+    .then(([user, correctPassword, failedAttempts]) => {
+      if (!correctPassword) {
         if (failedAttempts >= loginAttemptLimit) {
           return Promise.reject({
             status: 403,
@@ -265,7 +265,7 @@ exports.postUserLogin = (req, res, next) => {
     .catch(next);
 };
 
-exports.patchUserById = async (req, res, next) => {
+exports.patchUserById = (req, res, next) => {
   const { user_id } = req.params;
   const updatedUser = req.body;
 
@@ -292,18 +292,25 @@ exports.patchUserById = async (req, res, next) => {
 
 exports.deleteUserById = async (req, res, next) => {
   const { user_id } = req.params;
-  if (!isNaN(user_id)) {
-    const userExists = await checkUserExistsWithId(user_id);
-    if (userExists) {
-      return deleteUser(user_id)
-        .then(() => {
-          res.status(204).send({ msg: "No Content" });
-        })
-        .catch(next);
+
+  const checkUserExists = new Promise((resolve, reject) => {
+    if (!isNaN(user_id)) {
+      resolve(checkUserExistsWithId(user_id));
     } else {
-      res.status(404).send({ msg: "Not Found" });
+      reject({ status: 400, msg: "invalid user id" });
     }
-  } else {
-    res.status(400).send({ msg: "Bad Request" });
-  }
+  });
+
+  checkUserExists
+    .then((user) => {
+      if (user) {
+        return deleteUser(user_id);
+      } else {
+        return Promise.reject({ status: 404, msg: "No user found" });
+      }
+    })
+    .then(() => {
+      res.status(204).send({ msg: "No content" });
+    })
+    .catch(next);
 };

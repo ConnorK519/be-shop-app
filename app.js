@@ -35,7 +35,7 @@ app.post("/api/users/login", userLoginLimit, postUserLogin);
 
 app.patch("/api/users/:user_id", patchUserById);
 
-// app.delete("/api/users/:user_id", deleteUserById);
+app.delete("/api/users/:user_id", deleteUserById);
 
 // app.get("/api/products", getProducts);
 
