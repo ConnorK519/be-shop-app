@@ -616,38 +616,46 @@ describe("User", () => {
   });
 });
 
-// describe("Products", () => {
-//   describe("POST /api/products", () => {
-//     it("should successfully post a product and respond with a status 201", () => {
-//       chai
-//         .request(app)
-//         .post("/api/products")
-//         .send({
-//           seller_id: 4,
-//           product_name: "Test Item",
-//           description: "Test Worked if this is listed",
-//           price: 1.21,
-//           stock: 1,
-//           category: "testing",
-//         })
-//         .end((err, res) => {
-//           expect(res).to.have.status(201);
-//         });
-//     });
+describe("Products", () => {
+  describe("POST /api/products", () => {
+    beforeEach(() => {
+      return seed(data);
+    });
+    it("should successfully post a product and respond with a status 201", (done) => {
+      chai
+        .request(app)
+        .post("/api/products")
+        .send({
+          seller_id: 4,
+          product_name: "Test Item",
+          description: "Test Worked if this is listed",
+          price: 1.21,
+          stock: 1,
+          category: "testing",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(201);
+          expect(res.body.msg).to.equal("Product listed");
+          done();
+        });
+    });
 
-//     it("should respond with a status 400 if passed incomplete product information", () => {
-//       chai
-//         .request(app)
-//         .post("/api/products")
-//         .send({
-//           seller_id: 4,
-//           product_name: "Test Item",
-//           description: "Test Failed if this is listed",
-//           price: 1.21,
-//           stock: 1,
-//         })
-//         .end((err, res) => {
-//           expect(res).to.have.status(400);
-//         });
-//     });
-// });
+    it("should respond with a status 400 if passed incomplete product information", (done) => {
+      chai
+        .request(app)
+        .post("/api/products")
+        .send({
+          seller_id: 4,
+          product_name: "Test Item",
+          description: "Test Failed if this is listed",
+          price: 1.21,
+          stock: 1,
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Missing required field");
+          done();
+        });
+    });
+  });
+});

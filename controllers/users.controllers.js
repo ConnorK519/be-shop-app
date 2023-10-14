@@ -9,6 +9,7 @@ const {
   updateUserLockedTill,
   updateUserById,
   deleteUser,
+  updateUserProductsById,
 } = require("../models/users.models");
 
 exports.postUser = (req, res, next) => {
@@ -308,6 +309,9 @@ exports.deleteUserById = async (req, res, next) => {
       } else {
         return Promise.reject({ status: 404, msg: "No user found" });
       }
+    })
+    .then(() => {
+      return updateUserProductsById(user_id);
     })
     .then(() => {
       res.status(204).send({ msg: "No content" });

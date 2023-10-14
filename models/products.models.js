@@ -1,6 +1,6 @@
 const db = require("../db/connection");
 
-exports.selectProducts = async () => {
+exports.selectProducts = () => {
   return db
     .query(
       `SELECT product_name, image, price, seller_id FROM products
@@ -11,22 +11,29 @@ exports.selectProducts = async () => {
     });
 };
 
-exports.selectProductById = async (product_id) => {
+exports.selectProductById = (product_id) => {
   return db
     .query(
       `
-    SELECT products.*, users.username FROM  products 
+    SELECT products.*, users.username FROM products 
     JOIN users ON products.seller_id = users.user_id
-    WHERE product_id = ?
+    WHERE product_id = ? 
     `,
       product_id
     )
     .then((rows) => {
-      return rows[0][0];
+      if (rows[0][0]) {
+        return rows[0][0];
+      } else {
+        return Promise.reject({
+          status: 400,
+          msg: "Product no longer available",
+        });
+      }
     });
 };
 
-exports.insertProduct = async (newProduct) => {
+exports.insertProduct = (newProduct) => {
   return db.query(
     `INSERT INTO products (
     seller_id,

@@ -37,11 +37,11 @@ app.patch("/api/users/:user_id", patchUserById);
 
 app.delete("/api/users/:user_id", deleteUserById);
 
-// app.get("/api/products", getProducts);
+app.get("/api/products", getProducts);
 
-// app.get("/api/products/:product_id", getProductById);
+app.get("/api/products/:product_id", getProductById);
 
-// app.post("/api/products", upload.single("image"), postProduct);
+app.post("/api/products", upload.single("image"), postProduct);
 
 app.use(handleCustomErrors);
 

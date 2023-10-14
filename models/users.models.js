@@ -1,7 +1,7 @@
 const db = require("../db/connection");
 
-exports.insertUser = async (newUser) => {
-  return await db.query(
+exports.insertUser = (newUser) => {
+  return db.query(
     `INSERT INTO users (
     username,
     first_name,
@@ -21,7 +21,7 @@ exports.insertUser = async (newUser) => {
   );
 };
 
-exports.selectUserByEmail = async (email) => {
+exports.selectUserByEmail = (email) => {
   if (!email) {
     return false;
   }
@@ -30,7 +30,7 @@ exports.selectUserByEmail = async (email) => {
   });
 };
 
-exports.selectUserByUsername = async (username) => {
+exports.selectUserByUsername = (username) => {
   if (!username) {
     return false;
   }
@@ -41,7 +41,7 @@ exports.selectUserByUsername = async (username) => {
     });
 };
 
-exports.checkUserExistsWithId = async (user_id) => {
+exports.checkUserExistsWithId = (user_id) => {
   if (!user_id) {
     return false;
   }
@@ -74,7 +74,7 @@ exports.updateUserLockedTill = (date, user_id) => {
   );
 };
 
-exports.updateUserById = async (user_id, updatedUser) => {
+exports.updateUserById = (user_id, updatedUser) => {
   const validFields = {
     username: ["string", 5, 15],
     first_name: ["string", 1, 20],
@@ -137,4 +137,14 @@ exports.updateUserById = async (user_id, updatedUser) => {
 
 exports.deleteUser = (user_id) => {
   return db.query(`DELETE FROM users WHERE user_id = ?`, user_id);
+};
+
+exports.updateUserProductsById = (seller_id) => {
+  return db.query(
+    `
+    UPDATE products
+    SET seller_id = NULL
+    WHERE seller_id = ?`,
+    seller_id
+  );
 };
