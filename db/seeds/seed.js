@@ -11,6 +11,12 @@ const seed = ({ userData, productData }) => {
       return db.query("DROP TABLE IF EXISTS products;");
     })
     .then(() => {
+      return db.query("DROP TABLE IF EXISTS messages;");
+    })
+    .then(() => {
+      return db.query("DROP TABLE IF EXISTS chats;");
+    })
+    .then(() => {
       return db.query("DROP TABLE IF EXISTS users;");
     })
     .then(() => {
@@ -29,6 +35,21 @@ const seed = ({ userData, productData }) => {
         login_attempts INT DEFAULT 0,
         locked_till TIMESTAMP DEFAULT NULL,
         created_at DATE
+      )`);
+    })
+    .then(() => {
+      return db.query(`CREATE TABLE chats (
+        chat_id SERIAL PRIMARY KEY,
+        created_at DATE
+      )`);
+    })
+    .then(() => {
+      return db.query(`CREATE TABLE messages (
+        message_id SERIAL PRIMARY KEY,
+        chat_id INT REFERENCES chats(chat_id),
+        sender_id INT REFERENCES users(user_id),
+        message TEXT,
+        sent_at DATE
       )`);
     })
     .then(() => {
