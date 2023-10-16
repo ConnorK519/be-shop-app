@@ -25,7 +25,7 @@ exports.postUser = (req, res, next) => {
     street,
   } = req.body;
 
-  const register = new Promise((resolve, reject) => {
+  const checkUserInputs = new Promise((resolve, reject) => {
     if (
       username &&
       first_name &&
@@ -61,7 +61,7 @@ exports.postUser = (req, res, next) => {
           missingFields.push(formattedField);
         }
       }
-      let errMsg = "Missing a required input field";
+      let errMsg = "Missing required input field";
       if (missingFields.length > 1) {
         errMsg += "s";
       }
@@ -72,7 +72,7 @@ exports.postUser = (req, res, next) => {
     }
   });
 
-  register
+  checkUserInputs
     .then(([emailInUse, usernameInUse]) => {
       if (usernameInUse || emailInUse) {
         let errMsg;
@@ -174,7 +174,7 @@ exports.postUserLogin = (req, res, next) => {
 
   const loginAttemptLimit = 3;
 
-  const login = new Promise((resolve, reject) => {
+  const getUser = new Promise((resolve, reject) => {
     if (email && password) {
       resolve(selectUserByEmail(email));
     } else {
@@ -190,7 +190,7 @@ exports.postUserLogin = (req, res, next) => {
     }
   });
 
-  login
+  getUser
     .then((user) => {
       if (!user) {
         return Promise.reject({
@@ -226,8 +226,7 @@ exports.postUserLogin = (req, res, next) => {
         if (user.login_attempts) {
           userLoginResponse.push(0, updateUserLoginAttempts(0, user.user_id));
         }
-        userLoginResponse.push(0, null);
-        return userLoginResponse;
+        return Promise.all(userLoginResponse);
       } else {
         const attemptIncrease = 1;
         const newAttemptCount = user.login_attempts + attemptIncrease;
@@ -235,7 +234,7 @@ exports.postUserLogin = (req, res, next) => {
           newAttemptCount,
           updateUserLoginAttempts(newAttemptCount, user.user_id)
         );
-        if (newAttemptCount >= loginAttemptLimit) {
+        if (newAttemptCount >= loginAttemptLimit && !user.locked_till) {
           const lockTill = dayjs()
             .add(15, "minute")
             .format("YYYY-MM-DD HH-mm-ss");
@@ -256,12 +255,11 @@ exports.postUserLogin = (req, res, next) => {
           status: 400,
           msg: "Invalid email or password",
         });
-      } else {
-        delete user.password;
-        user.login_attempts = 0;
-        user.basket = JSON.parse(user.basket);
-        res.status(200).send({ user });
       }
+      delete user.password;
+      user.login_attempts = 0;
+      user.basket = JSON.parse(user.basket);
+      res.status(200).send({ user });
     })
     .catch(next);
 };
@@ -270,7 +268,7 @@ exports.patchUserById = (req, res, next) => {
   const { user_id } = req.params;
   const updatedUser = req.body;
 
-  const updateUser = new Promise((resolve, reject) => {
+  const checkUserId = new Promise((resolve, reject) => {
     if (!isNaN(user_id)) {
       resolve(checkUserExistsWithId(user_id));
     } else {
@@ -278,7 +276,7 @@ exports.patchUserById = (req, res, next) => {
     }
   });
 
-  updateUser
+  checkUserId
     .then((userExists) => {
       if (!userExists) {
         return Promise.reject({ status: 404, msg: "No user found" });
@@ -291,7 +289,7 @@ exports.patchUserById = (req, res, next) => {
     .catch(next);
 };
 
-exports.deleteUserById = async (req, res, next) => {
+exports.deleteUserById = (req, res, next) => {
   const { user_id } = req.params;
 
   const checkUserExists = new Promise((resolve, reject) => {

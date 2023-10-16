@@ -8,16 +8,30 @@ const {
 } = require("../models/products.models");
 
 exports.getProducts = (req, res, next) => {
-  return selectProducts().then((products) => {
-    res.status(200).send(products);
-  });
+  return selectProducts()
+    .then((products) => {
+      res.status(200).send(products);
+    })
+    .catch(next);
 };
 
 exports.getProductById = (req, res, next) => {
   const { product_id } = req.params;
-  return selectProductById(product_id)
+
+  const checkId = new Promise((resolve, reject) => {
+    if (isNaN(product_id) || product_id <= 0) {
+      reject({
+        status: 400,
+        msg: `Invalid product id: ${product_id}. id must be a number above 0`,
+      });
+    } else {
+      resolve(selectProductById(product_id));
+    }
+  });
+
+  checkId
     .then((product) => {
-      res.status(200).send(product);
+      res.status(200).send({ product });
     })
     .catch(next);
 };
@@ -35,17 +49,39 @@ exports.postProduct = (req, res, next) => {
       !stock ||
       !category
     ) {
-      return reject({ status: 400, msg: "Missing required field" });
+      const missingFields = [];
+      const allFields = [
+        "seller_id",
+        "product_name",
+        "description",
+        "price",
+        "stock",
+        "category",
+      ];
+      for (const field of allFields) {
+        if (!Object.keys(req.body).includes(field)) {
+          const formattedField = field.split("_").join(" ");
+          missingFields.push(formattedField);
+        }
+      }
+      let errMsg = "Missing required input field";
+      if (missingFields.length > 1) {
+        errMsg += "s";
+      }
+      return reject({
+        status: 400,
+        msg: `${errMsg} ${missingFields.join(", ")}`,
+      });
     }
     const currentDate = dayjs().format("YYYY-MM-DD HH-mm-ss");
     const fileName = `${product_name}-${Date.now()}-${seller_id}`;
-    const imageURL = `https://storage.googleapis.com/${bucketName}/${fileName}`;
+    let imageURL = null;
 
     const validFields = {
       seller_id: ["number", 0],
       product_name: ["string", 1, 100],
       description: ["string", 1, 1000],
-      price: ["number"],
+      price: ["number", 0],
       stock: ["number", 0],
       category: ["string", 1, 50],
     };
@@ -83,6 +119,7 @@ exports.postProduct = (req, res, next) => {
     }
 
     if (req.file) {
+      imageURL = `https://storage.googleapis.com/${bucketName}/${fileName}`;
       const blob = storageClient.bucket(bucketName).file(fileName);
       const stream = blob.createWriteStream({
         metadata: {
@@ -104,6 +141,7 @@ exports.postProduct = (req, res, next) => {
 
       stream.end(req.file.buffer);
     }
+
     return resolve(
       insertProduct([
         seller_id,

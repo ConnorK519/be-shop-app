@@ -3,7 +3,7 @@ const db = require("../db/connection");
 exports.selectProducts = () => {
   return db
     .query(
-      `SELECT product_name, image, price, seller_id FROM products
+      `SELECT product_name, image, price, product_id FROM products
     WHERE seller_id IS NOT NULL AND stock > 0`
     )
     .then((rows) => {
@@ -16,7 +16,7 @@ exports.selectProductById = (product_id) => {
     .query(
       `
     SELECT products.*, users.username FROM products 
-    JOIN users ON products.seller_id = users.user_id
+    LEFT JOIN users ON products.seller_id = users.user_id
     WHERE product_id = ? 
     `,
       product_id
@@ -26,8 +26,8 @@ exports.selectProductById = (product_id) => {
         return rows[0][0];
       } else {
         return Promise.reject({
-          status: 400,
-          msg: "Product no longer available",
+          status: 404,
+          msg: "Product not found",
         });
       }
     });

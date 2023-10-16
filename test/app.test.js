@@ -129,9 +129,7 @@ describe("User", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal(
-            "Missing a required input field street"
-          );
+          expect(res.body.msg).to.equal("Missing required input field street");
         });
 
       chai
@@ -150,7 +148,7 @@ describe("User", () => {
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal(
-            "Missing a required input field house number"
+            "Missing required input field house number"
           );
         });
 
@@ -170,7 +168,7 @@ describe("User", () => {
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal(
-            "Missing a required input field town or city"
+            "Missing required input field town or city"
           );
         });
 
@@ -190,7 +188,7 @@ describe("User", () => {
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal(
-            "Missing a required input field post code"
+            "Missing required input field post code"
           );
         });
 
@@ -210,7 +208,7 @@ describe("User", () => {
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal(
-            "Missing a required input field password"
+            "Missing required input field password"
           );
         });
 
@@ -229,7 +227,7 @@ describe("User", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Missing a required input field email");
+          expect(res.body.msg).to.equal("Missing required input field email");
         });
 
       chai
@@ -248,7 +246,7 @@ describe("User", () => {
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal(
-            "Missing a required input field last name"
+            "Missing required input field last name"
           );
         });
 
@@ -268,7 +266,7 @@ describe("User", () => {
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal(
-            "Missing a required input field first name"
+            "Missing required input field first name"
           );
         });
 
@@ -288,7 +286,7 @@ describe("User", () => {
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal(
-            "Missing a required input field username"
+            "Missing required input field username"
           );
           done();
         });
@@ -506,7 +504,7 @@ describe("User", () => {
     beforeEach(() => {
       return seed(data);
     });
-    it("should respond with a status 200 and a msg after successfully updating a user", (done) => {
+    it("should respond with a status 200 and a message after successfully updating a user", (done) => {
       chai
         .request(app)
         .patch("/api/users/1")
@@ -603,7 +601,7 @@ describe("User", () => {
         });
     });
 
-    it("should respond with a status 400 and an error message if passed an invalid value", (done) => {
+    it("should respond with a status 400 and an error message if passed an invalid id", (done) => {
       chai
         .request(app)
         .delete("/api/users/potato")
@@ -645,6 +643,87 @@ describe("Products", () => {
         .request(app)
         .post("/api/products")
         .send({
+          product_name: "Test Item",
+          description: "Test Failed if this is listed",
+          price: 1.21,
+          stock: 1,
+          category: "testing",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal(
+            "Missing required input field seller id"
+          );
+        });
+
+      chai
+        .request(app)
+        .post("/api/products")
+        .send({
+          seller_id: 4,
+          description: "Test Failed if this is listed",
+          price: 1.21,
+          stock: 1,
+          category: "testing",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal(
+            "Missing required input field product name"
+          );
+        });
+
+      chai
+        .request(app)
+        .post("/api/products")
+        .send({
+          seller_id: 4,
+          product_name: "Test Item",
+          price: 1.21,
+          stock: 1,
+          category: "testing",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal(
+            "Missing required input field description"
+          );
+        });
+
+      chai
+        .request(app)
+        .post("/api/products")
+        .send({
+          seller_id: 4,
+          product_name: "Test Item",
+          description: "Test Failed if this is listed",
+          stock: 1,
+          category: "testing",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Missing required input field price");
+        });
+
+      chai
+        .request(app)
+        .post("/api/products")
+        .send({
+          seller_id: 4,
+          product_name: "Test Item",
+          description: "Test Failed if this is listed",
+          price: 1.21,
+          category: "testing",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Missing required input field stock");
+        });
+
+      chai
+        .request(app)
+        .post("/api/products")
+        .send({
           seller_id: 4,
           product_name: "Test Item",
           description: "Test Failed if this is listed",
@@ -653,7 +732,28 @@ describe("Products", () => {
         })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Missing required field");
+          expect(res.body.msg).to.equal(
+            "Missing required input field category"
+          );
+          done();
+        });
+    });
+
+    it("should respond with a status 400 and an error message if passed an invalid value or values", (done) => {
+      chai
+        .request(app)
+        .post("/api/products")
+        .send({
+          seller_id: 4,
+          product_name: "Test Item",
+          description: "Test Worked if this is listed",
+          price: "hello",
+          stock: 1,
+          category: "testing",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Invalid field price");
           done();
         });
     });
