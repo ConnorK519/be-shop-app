@@ -552,7 +552,7 @@ describe("User", () => {
         });
     });
 
-    it("should respond with a status 404 and an error message when passed an user id that doesn't exist", (done) => {
+    it("should respond with a status 404 and an error message when passed a user id that doesn't exist", (done) => {
       chai
         .request(app)
         .patch("/api/users/99")
@@ -615,6 +615,24 @@ describe("User", () => {
 });
 
 describe("Products", () => {
+  describe("GET /api/products", () => {
+    beforeEach(() => {
+      return seed(data);
+    });
+    it("should respond with an array of products and a status 200", (done) => {
+      chai
+        .request(app)
+        .get("/api/products")
+        .end((err, res) => {
+          expect(res).to.have.status(200);
+        });
+    });
+  });
+  describe("GET /api/products/:product_id", () => {
+    beforeEach(() => {
+      return seed(data);
+    });
+  });
   describe("POST /api/products", () => {
     beforeEach(() => {
       return seed(data);

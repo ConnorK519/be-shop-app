@@ -52,6 +52,17 @@ exports.checkUserExistsWithId = (user_id) => {
     });
 };
 
+exports.selectUsersForChat = (user1_id, user2_id) => {
+  return db
+    .query(`SELECT username FROM users WHERE user_id IN (?, ?) `, [
+      user1_id,
+      user2_id,
+    ])
+    .then((rows) => {
+      return rows[0];
+    });
+};
+
 exports.updateUserLoginAttempts = (number, user_id) => {
   return db.query(
     `
