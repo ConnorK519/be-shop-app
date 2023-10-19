@@ -65,15 +65,13 @@ exports.postNewChatOrGetChat = (req, res, next) => {
       return chat;
     })
     .then((chat) => {
-      if (!chat) {
-        return selectChatByUsers(user1_id, user2_id);
+      if (Array.isArray(chat)) {
+        return { chat_id: chat[0].insertId };
       }
       return chat;
     })
     .then((chat) => {
       const id = chat.chat_id;
-      console.log(chat);
-
       return selectMessagesByChatId(id);
     })
     .then((messages) => {
