@@ -34,23 +34,28 @@ exports.postNewChatOrGetChat = (req, res, next) => {
     const numberCheck = !isNaN(user1_id) && !isNaN(user2_id);
     const positiveCheck = user1_id > 0 && user2_id > 0;
 
+    if (!user1_id || !user2_id) {
+      return reject({ status: 400, msg: "Missing a user id" });
+    }
+
     if (user1_id === user2_id) {
       return reject({ status: 400, msg: "Can't message yourself" });
     }
 
     if (numberCheck && positiveCheck) {
-      resolve(
-        Promise.all([
-          selectChatByUsers(user1_id, user2_id),
-          selectUsersForChat(user1_id, user2_id),
-        ])
-      );
+      resolve(selectChatByUsers(user1_id, user2_id));
     } else {
       reject({ status: 400, msg: "One or both user ids are invalid" });
     }
   });
 
   checkForChat
+    .then((chat) => {
+      if (chat) {
+        return [chat];
+      }
+      return Promise.all([chat, selectUsersForChat(user1_id, user2_id)]);
+    })
     .then(([chat, users]) => {
       if (!chat) {
         if (users.length === 2) {
