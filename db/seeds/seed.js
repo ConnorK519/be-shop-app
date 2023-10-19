@@ -1,7 +1,7 @@
 const db = require("../connection");
 const { formatUsers } = require("./utils");
 
-const seed = ({ userData, productData }) => {
+const seed = ({ userData, productData, chatData, messageData }) => {
   return db
     .query("DROP TABLE IF EXISTS ordered_items;")
     .then(() => {
@@ -40,7 +40,10 @@ const seed = ({ userData, productData }) => {
     .then(() => {
       return db.query(`CREATE TABLE chats (
         chat_id SERIAL PRIMARY KEY,
-        created_at DATE
+        last_message_time DATE DEFAULT NULL,
+        last_message TEXT DEFAULT NULL,
+        user1_id INT REFERENCES users(user_id),
+        user2_id INT REFERENCES users(user_id)
       )`);
     })
     .then(() => {
@@ -125,6 +128,35 @@ const seed = ({ userData, productData }) => {
             product.stock,
             product.category,
             product.created_at,
+          ]),
+        ]
+      );
+    })
+    .then(() => {
+      return db.query(
+        `INSERT INTO chats (
+        user1_id,
+        user2_id
+      )
+      VALUES ?`,
+        [chatData.map((chat) => [chat.user1_id, chat.user2_id])]
+      );
+    })
+    .then(() => {
+      return db.query(
+        `INSERT INTO messages (
+        chat_id,
+        sender_id,
+        message,
+        sent_at
+      )
+      VALUES ?`,
+        [
+          messageData.map((message) => [
+            message.chat_id,
+            message.sender_id,
+            message.message,
+            message.sent_at,
           ]),
         ]
       );
