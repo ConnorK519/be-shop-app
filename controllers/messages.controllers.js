@@ -5,6 +5,8 @@ const {
   selectMessagesByChatId,
   selectChatByUsers,
   insertNewChat,
+  insertNewMessage,
+  updateChatById,
 } = require("../models/messages.models");
 
 const { selectUsersForChat } = require("../models/users.models");
@@ -13,7 +15,7 @@ exports.getChatsByUserId = (req, res, next) => {
   const { user_id } = req.params;
   return selectChatsByUserId(user_id)
     .then((chats) => {
-      res.status(200).send(chats);
+      res.status(200).send({ chats });
     })
     .catch(next);
 };
@@ -22,7 +24,7 @@ exports.getMessagesByChatId = (req, res, next) => {
   const { chat_id } = req.params;
   return selectMessagesByChatId(chat_id)
     .then((messages) => {
-      res.status(200).send(messages);
+      res.status(200).send({ messages });
     })
     .catch(next);
 };
@@ -80,7 +82,36 @@ exports.postNewChatOrGetChat = (req, res, next) => {
       return selectMessagesByChatId(id);
     })
     .then((messages) => {
-      res.status(200).send(messages);
+      res.status(200).send({ messages });
+    })
+    .catch(next);
+};
+
+exports.postMessageToChatById = (req, res, next) => {
+  const { chat_id } = req.params;
+  const { sender_id, message } = req.body;
+  const currentDate = dayjs().format("YYYY-MM-DD HH-mm-ss");
+  const chatIdCheck = isNaN(chat_id) || chat_id < 0;
+  const senderIdCheck = isNaN(sender_id) || sender_id < 0;
+
+  const patchChat = new Promise((resolve, reject) => {
+    if (chatIdCheck || senderIdCheck) {
+      return reject({ status: 400, msg: "One or more invalid ids" });
+    }
+    resolve(updateChatById(message, currentDate, chat_id, sender_id));
+  });
+
+  patchChat
+    .then((patchData) => {
+      const patchSuccess = patchData[0].affectedRows;
+
+      if (patchSuccess) {
+        return insertNewMessage(chat_id, sender_id, message, currentDate);
+      }
+      return Promise.reject({ status: 404, msg: "No chat found" });
+    })
+    .then((newMessageId) => {
+      res.status(201).send({ newMessageId });
     })
     .catch(next);
 };

@@ -10,7 +10,7 @@ const {
 exports.getProducts = (req, res, next) => {
   return selectProducts()
     .then((products) => {
-      res.status(200).send(products);
+      res.status(200).send({ products });
     })
     .catch(next);
 };

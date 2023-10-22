@@ -40,7 +40,7 @@ const seed = ({ userData, productData, chatData, messageData }) => {
     .then(() => {
       return db.query(`CREATE TABLE chats (
         chat_id SERIAL PRIMARY KEY,
-        last_message_time DATE DEFAULT NULL,
+        last_message_time TIMESTAMP DEFAULT NULL,
         last_message TEXT DEFAULT NULL,
         user1_id INT REFERENCES users(user_id),
         user2_id INT REFERENCES users(user_id)
@@ -52,7 +52,7 @@ const seed = ({ userData, productData, chatData, messageData }) => {
         chat_id INT REFERENCES chats(chat_id),
         sender_id INT REFERENCES users(user_id),
         message TEXT,
-        sent_at DATE
+        sent_at TIMESTAMP
       )`);
     })
     .then(() => {
@@ -136,10 +136,19 @@ const seed = ({ userData, productData, chatData, messageData }) => {
       return db.query(
         `INSERT INTO chats (
         user1_id,
-        user2_id
+        user2_id,
+        last_message_time,
+        last_message 
       )
       VALUES ?`,
-        [chatData.map((chat) => [chat.user1_id, chat.user2_id])]
+        [
+          chatData.map((chat) => [
+            chat.user1_id,
+            chat.user2_id,
+            chat.last_message_time,
+            chat.last_message,
+          ]),
+        ]
       );
     })
     .then(() => {

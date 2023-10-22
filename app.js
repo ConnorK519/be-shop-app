@@ -27,6 +27,7 @@ const {
   getChatsByUserId,
   getMessagesByChatId,
   postNewChatOrGetChat,
+  postMessageToChatById,
 } = require("./controllers/messages.controllers");
 
 const app = express();
@@ -54,6 +55,8 @@ app.get("/api/chats/:user_id", getChatsByUserId);
 app.get("/api/messages/:chat_id", getMessagesByChatId);
 
 app.post("/api/chats", postNewChatOrGetChat);
+
+app.post("/api/messages/:chat_id", postMessageToChatById);
 
 app.use(handleCustomErrors);
 

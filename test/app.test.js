@@ -6,7 +6,9 @@ const data = require("../db/data/test-data/index");
 const chai = require("chai");
 const expect = chai.expect;
 const chaiHttp = require("chai-http");
+const sorted = require("chai-sorted");
 
+chai.use(sorted);
 chai.use(chaiHttp);
 
 after("all", () => {
@@ -624,13 +626,64 @@ describe("Products", () => {
         .request(app)
         .get("/api/products")
         .end((err, res) => {
+          const { products } = res.body;
           expect(res).to.have.status(200);
+          products.forEach((product) => {
+            expect(product).to.have.property("product_name");
+            expect(product).to.have.property("image");
+            expect(product).to.have.property("price");
+            expect(product).to.have.property("product_id");
+          });
+          done();
         });
     });
   });
   describe("GET /api/products/:product_id", () => {
     beforeEach(() => {
       return seed(data);
+    });
+    it("should respond with a product and a status 200", (done) => {
+      chai
+        .request(app)
+        .get("/api/products/1")
+        .end((err, res) => {
+          const { product } = res.body;
+          expect(res).to.have.status(200);
+          expect(product).to.have.property("product_id");
+          expect(product).to.have.property("seller_id");
+          expect(product).to.have.property("image");
+          expect(product).to.have.property("product_name");
+          expect(product).to.have.property("description");
+          expect(product).to.have.property("price");
+          expect(product).to.have.property("stock");
+          expect(product).to.have.property("category");
+          expect(product).to.have.property("created_at");
+          done();
+        });
+    });
+
+    it("should respond with a status 400 and an error message if passed an invalid id", (done) => {
+      chai
+        .request(app)
+        .get("/api/products/onion")
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal(
+            "Invalid product id: onion. id must be a number above 0"
+          );
+          done();
+        });
+    });
+
+    it("should respond with a status 404 and an error message if the product doesn't exist", (done) => {
+      chai
+        .request(app)
+        .get("/api/products/99")
+        .end((err, res) => {
+          expect(res).to.have.status(404);
+          expect(res.body.msg).to.equal("Product not found");
+          done();
+        });
     });
   });
   describe("POST /api/products", () => {
@@ -775,5 +828,32 @@ describe("Products", () => {
           done();
         });
     });
+  });
+});
+describe("Messages", () => {
+  describe("GET /api/chats/:user_id", () => {
+    beforeEach(() => {
+      return seed(data);
+    });
+    it("should respond with an array of the provided users chats and a status 200", (done) => {
+      chai
+        .request(app)
+        .get("/api/chats/1")
+        .end((err, res) => {
+          const { chats } = res.body;
+          expect(res).to.have.status(200);
+          expect(chats).of.be.descendingBy("last_message_time");
+          chats.forEach((chat) => {
+            expect(chat).to.have.property("chat_id");
+            expect(chat).to.have.property("last_message_time");
+            expect(chat).to.have.property("last_message");
+            expect(chat).to.have.property("user1_id");
+            expect(chat).to.have.property("user2_id");
+            expect(chat).to.have.property("username");
+          });
+          done();
+        });
+    });
+    it("", () => {});
   });
 });
