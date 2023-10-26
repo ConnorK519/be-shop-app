@@ -1,5 +1,7 @@
 const bcrypt = require("bcrypt");
 const dayjs = require("dayjs");
+const jwt = require("jsonwebtoken");
+
 const {
   insertUser,
   selectUserByEmail,

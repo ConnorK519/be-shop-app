@@ -52,12 +52,12 @@ exports.checkUserExistsWithId = (user_id) => {
     });
 };
 
-exports.selectUsersForChat = (user1_id, user2_id) => {
+exports.selectUsersAndChat = (user1_id, user2_id) => {
   return db
-    .query(`SELECT username FROM users WHERE user_id IN (?, ?) `, [
-      user1_id,
-      user2_id,
-    ])
+    .query(
+      `SELECT username, (SELECT chat_id FROM chats WHERE user1_id = ? AND user2_id = ? OR user1_id = ? AND user2_id = ?) AS chat_id FROM users WHERE user_id IN (?, ?) `,
+      [user1_id, user2_id, user2_id, user1_id, user1_id, user2_id]
+    )
     .then((rows) => {
       return rows[0];
     });

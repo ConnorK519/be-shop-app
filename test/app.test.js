@@ -835,14 +835,15 @@ describe("Messages", () => {
     beforeEach(() => {
       return seed(data);
     });
-    it("should respond with an array of the provided users chats and a status 200", (done) => {
+    it("should respond with an array of the provided users chats in descending order by time of the last message and a status 200", (done) => {
       chai
         .request(app)
         .get("/api/chats/1")
         .end((err, res) => {
           const { chats } = res.body;
           expect(res).to.have.status(200);
-          expect(chats).of.be.descendingBy("last_message_time");
+          expect(chats).to.be.descendingBy("last_message_time");
+          expect(chats).to.have.length(2);
           chats.forEach((chat) => {
             expect(chat).to.have.property("chat_id");
             expect(chat).to.have.property("last_message_time");
@@ -854,6 +855,156 @@ describe("Messages", () => {
           done();
         });
     });
-    it("", () => {});
+    it("should respond with a status 400 and an error message if passed an invalid user id", (done) => {
+      chai
+        .request(app)
+        .get("/api/chats/cheese")
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Invalid user id");
+          done();
+        });
+    });
+
+    it("should respond with a status 404 and an error message if the user id does not exist", (done) => {
+      chai
+        .request(app)
+        .get("/api/chats/111")
+        .end((err, res) => {
+          expect(res).to.have.status(404);
+          expect(res.body.msg).to.equal("User not found");
+          done();
+        });
+    });
+  });
+
+  describe("GET /api/messages/:chat_id", () => {
+    beforeEach(() => {
+      return seed(data);
+    });
+    it("should respond with a status 200 and an array of messages in descending order by time for the passed chat", (done) => {
+      const chatId = 1;
+      chai
+        .request(app)
+        .get(`/api/messages/${chatId}`)
+        .end((err, res) => {
+          const { messages } = res.body;
+          expect(res).to.have.status(200);
+          expect(messages).to.be.descendingBy("sent_at");
+          expect(messages).to.have.length(3);
+          messages.forEach((message) => {
+            expect(message.chat_id).to.equal(chatId);
+            expect(message).to.have.property("chat_id");
+            expect(message).to.have.property("message_id");
+            expect(message).to.have.property("sender_id");
+            expect(message).to.have.property("message");
+            expect(message).to.have.property("sent_at");
+            expect(message).to.have.property("username");
+          });
+          done();
+        });
+    });
+    it("should respond with a status 200 and an empty array if passed a chat id that does not exist yet", (done) => {
+      chai
+        .request(app)
+        .get("/api/messages/100")
+        .end((err, res) => {
+          const { messages } = res.body;
+          expect(res).to.have.status(200);
+          expect(messages).to.have.length(0);
+          done();
+        });
+    });
+    it("should respond with a status 400 and an error message if passed an invalid chat_id", (done) => {
+      chai
+        .request(app)
+        .get("/api/messages/notAnId")
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Invalid chat id");
+          done();
+        });
+    });
+  });
+  describe("POST /api/chats", () => {
+    beforeEach(() => {
+      return seed(data);
+    });
+    it("should successfully post a new chat and respond with the chat id and an empty array of messages with a status 200", (done) => {
+      chai
+        .request(app)
+        .post("/api/chats")
+        .send({ user1_id: 1, user2_id: 10 })
+        .end((err, res) => {
+          const { messages } = res.body;
+          const { chat_id } = res.body;
+          expect(res).to.have.status(200);
+          expect(messages).to.have.length(0);
+          expect(res.body).to.have.property("chat_id");
+          expect(chat_id).to.equal(11);
+          done();
+        });
+    });
+    it("should respond with a status 400 and an error message if missing a user id", (done) => {
+      chai
+        .request(app)
+        .post("/api/chats")
+        .send({ user1_id: 1 })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Missing a user id");
+          done();
+        });
+    });
+    it("should respond with a status 400 and an error if the 2 passed ids are the same", (done) => {
+      chai
+        .request(app)
+        .post("/api/chats")
+        .send({ user1_id: 1, user2_id: 1 })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Can't message yourself");
+          done();
+        });
+    });
+    it("should respond with a status 400 and an error message if passed invalid ids", (done) => {
+      chai
+        .request(app)
+        .post("/api/chats")
+        .send({ user1_id: 1, user2_id: "onion" })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("One or both user ids are invalid");
+          done();
+        });
+    });
+    it("should respond with a status 404 and an error message if 1 or both of the users don't exist", (done) => {
+      chai
+        .request(app)
+        .post("/api/chats")
+        .send({ user1_id: 10, user2_id: 49 })
+        .end((err, res) => {
+          expect(res).to.have.status(404);
+          expect(res.body.msg).to.equal("One or both users don't exist");
+          done();
+        });
+    });
+  });
+  describe("POST /api/messages/:chat_id", () => {
+    beforeEach(() => {
+      return seed(data);
+    });
+    it("should respond with a status 201 the id of the new message", (done) => {
+      chai
+        .request(app)
+        .post("/api/messages/1")
+        .send({ sender_id: 2, message: "This is a test message" })
+        .end((err, res) => {
+          const { newMessageId } = res.body;
+          expect(res).to.have.status(201);
+          expect(newMessageId).to.equal(31);
+          done();
+        });
+    });
   });
 });

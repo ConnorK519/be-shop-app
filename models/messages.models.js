@@ -16,7 +16,7 @@ exports.selectChatsByUserId = (user_id) => {
       chats.forEach(
         (chat) =>
           (chat.last_message_time = dayjs(chat.last_message_time).format(
-            "YYYY-MM-DD HH-mm-ss"
+            "YYYY-MM-DD HH:mm:ss"
           ))
       );
       return chats;
@@ -43,21 +43,6 @@ exports.selectMessagesByChatId = (chat_id) => {
           ))
       );
       return messages;
-    });
-};
-
-exports.selectChatByUsers = (user1_id, user2_id) => {
-  return db
-    .query(
-      `SELECT chat_id FROM chats 
-     WHERE user1_id = ? AND user2_id = ? OR user1_id = ? AND user2_id = ?`,
-      [user1_id, user2_id, user2_id, user1_id]
-    )
-    .then((rows) => {
-      if (rows[0][0]) {
-        return rows[0][0];
-      }
-      return false;
     });
 };
 
