@@ -21,27 +21,35 @@ exports.insertUser = (newUser) => {
   );
 };
 
+exports.checkEmailAndUsername = (email, username) => {
+  return db
+    .query(
+      `
+  SELECT username, email
+  FROM users
+  WHERE email = ? OR username = ?`,
+      [email, username]
+    )
+    .then((rows) => {
+      return rows[0];
+    });
+};
+
 exports.selectUserByEmail = (email) => {
   if (!email) {
     return false;
   }
-  return db.query(`SELECT * FROM users WHERE email = ?`, email).then((rows) => {
-    return rows[0][0];
-  });
-};
-
-exports.selectUserByUsername = (username) => {
-  if (!username) {
-    return false;
-  }
   return db
-    .query(`SELECT * FROM users WHERE username = ?`, username)
+    .query(
+      `SELECT user_id, username, password, locked_till, login_attempts, basket FROM users WHERE email = ?`,
+      email
+    )
     .then((rows) => {
       return rows[0][0];
     });
 };
 
-exports.checkUserExistsWithId = (user_id) => {
+exports.selectUserById = (user_id) => {
   if (!user_id) {
     return false;
   }

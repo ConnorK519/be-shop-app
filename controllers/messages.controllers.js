@@ -10,7 +10,7 @@ const {
 
 const {
   selectUsersAndChat,
-  checkUserExistsWithId,
+  selectUserById,
 } = require("../models/users.models");
 
 exports.getChatsByUserId = (req, res, next) => {
@@ -19,7 +19,7 @@ exports.getChatsByUserId = (req, res, next) => {
   const checkUser = new Promise((resolve, reject) => {
     const IdCheck = !isNaN(user_id) && user_id > 0;
     if (IdCheck) {
-      return resolve(checkUserExistsWithId(user_id));
+      return resolve(selectUserById(user_id));
     }
     reject({ status: 400, msg: "Invalid user id" });
   });

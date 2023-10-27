@@ -4,9 +4,9 @@ const jwt = require("jsonwebtoken");
 
 const {
   insertUser,
+  checkEmailAndUsername,
   selectUserByEmail,
-  selectUserByUsername,
-  checkUserExistsWithId,
+  selectUserById,
   updateUserLoginAttempts,
   updateUserLockedTill,
   updateUserById,
@@ -39,11 +39,7 @@ exports.postUser = (req, res, next) => {
       house_number &&
       street
     ) {
-      const fieldsInUse = [
-        selectUserByEmail(email),
-        selectUserByUsername(username),
-      ];
-      resolve(Promise.all(fieldsInUse));
+      resolve(checkEmailAndUsername(email, username));
     } else {
       const missingFields = [];
       const allFields = [
@@ -75,7 +71,20 @@ exports.postUser = (req, res, next) => {
   });
 
   checkUserInputs
-    .then(([emailInUse, usernameInUse]) => {
+    .then((conflictCheck) => {
+      let usernameInUse;
+      let emailInUse;
+      if (conflictCheck.length) {
+        conflictCheck.forEach((user) => {
+          if (user.username === username) {
+            usernameInUse = true;
+          }
+          if (user.email === email) {
+            emailInUse = true;
+          }
+        });
+      }
+
       if (usernameInUse || emailInUse) {
         let errMsg;
         if (usernameInUse) {
@@ -160,12 +169,15 @@ exports.postUser = (req, res, next) => {
         currentDate,
       ]);
     })
-    .then(() => {
-      return selectUserByEmail(email);
+    .then((inputData) => {
+      const newUser = {};
+      newUser.user_id = inputData[0].insertId;
+      return newUser;
     })
     .then((user) => {
-      delete user.password;
-      user.basket = JSON.parse(user.basket);
+      const accessToken = jwt.sign(user, process.env.JWT_SECRET);
+      res.setHeader("authorization", `Bearer ${accessToken}`);
+      user.username = username;
       res.status(201).send({ user });
     })
     .catch(next);
@@ -246,6 +258,7 @@ exports.postUserLogin = (req, res, next) => {
       return Promise.all(userLoginResponse);
     })
     .then(([user, correctPassword, failedAttempts]) => {
+      const { user_id, username, basket } = user;
       if (!correctPassword) {
         if (failedAttempts >= loginAttemptLimit) {
           return Promise.reject({
@@ -258,10 +271,12 @@ exports.postUserLogin = (req, res, next) => {
           msg: "Invalid email or password",
         });
       }
-      delete user.password;
-      user.login_attempts = 0;
-      user.basket = JSON.parse(user.basket);
-      res.status(200).send({ user });
+      const userResponse = { user_id };
+      const accessToken = jwt.sign(userResponse, process.env.JWT_SECRET);
+      res.setHeader("authorization", `Bearer ${accessToken}`);
+      userResponse.username = username;
+      userResponse.basket = JSON.parse(basket);
+      res.status(200).send({ user: userResponse });
     })
     .catch(next);
 };
@@ -272,7 +287,7 @@ exports.patchUserById = (req, res, next) => {
 
   const checkUserId = new Promise((resolve, reject) => {
     if (!isNaN(user_id)) {
-      resolve(checkUserExistsWithId(user_id));
+      resolve(selectUserById(user_id));
     } else {
       reject({ status: 400, msg: "Invalid user id" });
     }
@@ -296,7 +311,7 @@ exports.deleteUserById = (req, res, next) => {
 
   const checkUserExists = new Promise((resolve, reject) => {
     if (!isNaN(user_id)) {
-      resolve(checkUserExistsWithId(user_id));
+      resolve(selectUserById(user_id));
     } else {
       reject({ status: 400, msg: "invalid user id" });
     }
