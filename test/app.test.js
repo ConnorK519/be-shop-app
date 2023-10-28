@@ -817,6 +817,7 @@ describe("Messages", () => {
       chai
         .request(app)
         .get("/api/chats/1")
+        .set("authorization", process.env.TEST_TOKEN)
         .end((err, res) => {
           const { chats } = res.body;
           expect(res).to.have.status(200);
@@ -837,6 +838,7 @@ describe("Messages", () => {
       chai
         .request(app)
         .get("/api/chats/cheese")
+        .set("authorization", process.env.TEST_TOKEN)
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal("Invalid user id");
@@ -848,6 +850,7 @@ describe("Messages", () => {
       chai
         .request(app)
         .get("/api/chats/111")
+        .set("authorization", process.env.TEST_TOKEN)
         .end((err, res) => {
           expect(res).to.have.status(404);
           expect(res.body.msg).to.equal("User not found");

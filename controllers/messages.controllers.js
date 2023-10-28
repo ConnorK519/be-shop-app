@@ -18,18 +18,18 @@ exports.getChatsByUserId = (req, res, next) => {
 
   const checkUser = new Promise((resolve, reject) => {
     const IdCheck = !isNaN(user_id) && user_id > 0;
-    if (IdCheck) {
-      return resolve(selectUserById(user_id));
+    if (!IdCheck) {
+      return reject({ status: 400, msg: "Invalid user id" });
     }
-    reject({ status: 400, msg: "Invalid user id" });
+    return resolve(selectUserById(user_id));
   });
 
   checkUser
     .then((user) => {
-      if (user) {
-        return selectChatsByUserId(user_id);
+      if (!user) {
+        return Promise.reject({ status: 404, msg: "User not found" });
       }
-      return Promise.reject({ status: 404, msg: "User not found" });
+      return selectChatsByUserId(user_id);
     })
     .then((chats) => {
       res.status(200).send({ chats });
