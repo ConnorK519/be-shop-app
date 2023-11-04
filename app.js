@@ -52,7 +52,7 @@ app.get("/api/products/:product_id", getProductById);
 
 app.post("/api/products", upload.single("image"), postProduct);
 
-app.get("/api/chats/:user_id", authenticateToken, getChatsByUserId);
+app.get("/api/chats", authenticateToken, getChatsByUserId);
 
 app.get("/api/messages/:chat_id", getMessagesByChatId);
 

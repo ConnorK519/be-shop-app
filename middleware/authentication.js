@@ -7,8 +7,6 @@ exports.authenticateToken = (req, res, next) => {
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) return res.status(403).send({ msg: "Token expired" });
     req.user = user;
-    console.log(user);
-
     next();
   });
 };

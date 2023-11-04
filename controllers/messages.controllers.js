@@ -14,23 +14,17 @@ const {
 } = require("../models/users.models");
 
 exports.getChatsByUserId = (req, res, next) => {
-  const { user_id } = req.params;
+  const { user_id } = req.user;
 
-  const checkUser = new Promise((resolve, reject) => {
+  const getUserChats = new Promise((resolve, reject) => {
     const IdCheck = !isNaN(user_id) && user_id > 0;
     if (!IdCheck) {
       return reject({ status: 400, msg: "Invalid user id" });
     }
-    return resolve(selectUserById(user_id));
+    return resolve(selectChatsByUserId(user_id));
   });
 
-  checkUser
-    .then((user) => {
-      if (!user) {
-        return Promise.reject({ status: 404, msg: "User not found" });
-      }
-      return selectChatsByUserId(user_id);
-    })
+  getUserChats
     .then((chats) => {
       res.status(200).send({ chats });
     })

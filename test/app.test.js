@@ -38,6 +38,7 @@ describe("User", () => {
         .end((err, res) => {
           const userData = res.body.user;
           expect(res).to.have.status(201);
+          expect(res.headers).to.have.property("authorization");
           expect(userData).to.have.property("user_id");
           expect(userData).to.have.property("username");
           done();
@@ -808,22 +809,42 @@ describe("Products", () => {
     });
   });
 });
+
 describe("Messages", () => {
-  describe("GET /api/chats/:user_id", () => {
+  describe("GET /api/chats", () => {
     beforeEach(() => {
       return seed(data);
     });
+    let token;
+    chai
+      .request(app)
+      .post("/api/users/login")
+      .send({
+        email: "jalkin0@odnoklassniki.ru",
+        password: "yE4`h6|86#(",
+      })
+      .end((err, res) => {
+        token = res.headers.authorization;
+      });
+
     it("should respond with an array of the provided users chats in descending order by time of the last message and a status 200", (done) => {
       chai
         .request(app)
-        .get("/api/chats/1")
-        .set("authorization", process.env.TEST_TOKEN)
+        .get("/api/chats")
+        .set("authorization", token)
         .end((err, res) => {
           const { chats } = res.body;
           expect(res).to.have.status(200);
           expect(chats).to.be.descendingBy("last_message_time");
           expect(chats).to.have.length(2);
           chats.forEach((chat) => {
+            const testUserId = 1;
+            const idMatch =
+              chat.user1_id === testUserId || chat.user2_id === testUserId
+                ? true
+                : false;
+
+            expect(idMatch).to.equal(true);
             expect(chat).to.have.property("chat_id");
             expect(chat).to.have.property("last_message_time");
             expect(chat).to.have.property("last_message");
@@ -834,11 +855,13 @@ describe("Messages", () => {
           done();
         });
     });
+
+    /*
+   -------------Tests Invalidated by the implementation of jwt this comment is to document previous implementation-----------
     it("should respond with a status 400 and an error message if passed an invalid user id", (done) => {
       chai
         .request(app)
         .get("/api/chats/cheese")
-        .set("authorization", process.env.TEST_TOKEN)
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal("Invalid user id");
@@ -850,13 +873,13 @@ describe("Messages", () => {
       chai
         .request(app)
         .get("/api/chats/111")
-        .set("authorization", process.env.TEST_TOKEN)
         .end((err, res) => {
           expect(res).to.have.status(404);
           expect(res.body.msg).to.equal("User not found");
           done();
         });
     });
+    */
   });
 
   describe("GET /api/messages/:chat_id", () => {
