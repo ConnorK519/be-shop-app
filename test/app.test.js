@@ -393,29 +393,56 @@ describe("User", () => {
         });
     });
 
-    it("should respond with a status 400 and an error message if passed an incorrect email or password", (done) => {
-      chai
+    it("should respond with a status 400 and an error message if passed an incorrect email or password", async () => {
+      const res1 = await chai
         .request(app)
         .post("/api/users/login")
         .send({
           email: "jalkin0@odnoklassniki.ru",
           password: "yE4`h6|86#",
         })
-        .end((err, res) => {
-          expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Invalid email or password");
-        });
 
-      chai
+          expect(res1).to.have.status(400);
+          expect(res1.body.msg).to.equal("Invalid email or password");
+        
+
+      const res2 = await chai
         .request(app)
         .post("/api/users/login")
         .send({
           email: "jalkin0@odnoklassniki.r",
           password: "yE4`h6|86#(",
         })
+          expect(res2).to.have.status(400);
+          expect(res2.body.msg).to.equal("Invalid email or password");
+          /*
+          I know this is inconsistent, but I built a new pc and my tests started failing for no reason on the new machine changing this to an async function seems 
+          to have fixed the weird bug where it would pass at times, but fail at others I have checked manually and the test are returning expected responses
+          */
+      
+    });
+
+    it("should respond with a status 400 and an error message if a required field is missing", (done) => {
+      chai
+        .request(app)
+        .post("/api/users/login")
+        .send({
+          email: "jalkin0@odnoklassniki.ru",
+        })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Invalid email or password");
+          expect(res.body.msg).to.equal("Missing field password");
+        });
+
+      chai
+        .request(app)
+        .post("/api/users/login")
+        .send({
+          password: "yE4`h6|86#(",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("Missing field email");
           done();
         });
     });
@@ -451,31 +478,6 @@ describe("User", () => {
           expect(res.body.msg).to.equal(
             "This Account Is temporarily locked due to failed login attempts"
           );
-          done();
-        });
-    });
-
-    it("should respond with a status 400 and an error message if a required field is missing", (done) => {
-      chai
-        .request(app)
-        .post("/api/users/login")
-        .send({
-          email: "jalkin0@odnoklassniki.ru",
-        })
-        .end((err, res) => {
-          expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Missing field password");
-        });
-
-      chai
-        .request(app)
-        .post("/api/users/login")
-        .send({
-          password: "yE4`h6|86#(",
-        })
-        .end((err, res) => {
-          expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("Missing field email");
           done();
         });
     });
