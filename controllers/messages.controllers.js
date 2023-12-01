@@ -44,7 +44,8 @@ exports.getMessagesByChatId = (req, res, next) => {
 };
 
 exports.postNewChatOrGetChat = (req, res, next) => {
-  const { user1_id, user2_id } = req.body;
+  const user1_id = req.user.user_id;
+  const { user2_id } = req.body;
 
   const checkForChat = new Promise((resolve, reject) => {
     const numberCheck = !isNaN(user1_id) && !isNaN(user2_id);
@@ -97,17 +98,18 @@ exports.postNewChatOrGetChat = (req, res, next) => {
 
 exports.postMessageToChatById = (req, res, next) => {
   const { chat_id } = req.params;
-  const { sender_id, message } = req.body;
+  const { message } = req.body;
+  const sender_id = req.user.user_id;
+
   const currentDate = dayjs().format("YYYY-MM-DD HH-mm-ss");
   const chatIdCheck = isNaN(chat_id) || chat_id < 0;
-  const senderIdCheck = isNaN(sender_id) || sender_id < 0;
 
   const patchChat = new Promise((resolve, reject) => {
     if (!message) {
       return reject({ status: 400, msg: "No message input" });
     }
-    if (chatIdCheck || senderIdCheck) {
-      return reject({ status: 400, msg: "One or more invalid ids" });
+    if (chatIdCheck) {
+      return reject({ status: 400, msg: "Invalid chat id" });
     }
     resolve(updateChatById(message, currentDate, chat_id, sender_id));
   });

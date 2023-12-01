@@ -61,9 +61,9 @@ app.get("/api/chats", authenticateToken, getChatsByUserId);
 
 app.get("/api/messages/:chat_id", authenticateToken, getMessagesByChatId);
 
-app.post("/api/chats", postNewChatOrGetChat);
+app.post("/api/chats", authenticateToken, postNewChatOrGetChat);
 
-app.post("/api/messages/:chat_id", postMessageToChatById);
+app.post("/api/messages/:chat_id", authenticateToken, postMessageToChatById);
 
 app.use(handleCustomErrors);
 

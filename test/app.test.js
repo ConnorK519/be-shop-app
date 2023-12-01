@@ -960,11 +960,23 @@ describe("Messages", () => {
     beforeEach(() => {
       return seed(data);
     });
+    let token;
+    chai
+      .request(app)
+      .post("/api/users/login")
+      .send({
+        email: "jalkin0@odnoklassniki.ru",
+        password: "yE4`h6|86#(",
+      })
+      .end((err, res) => {
+        token = res.headers.authorization;
+      });
     it("should successfully post a new chat and respond with the chat id and an empty array of messages with a status 200", (done) => {
       chai
         .request(app)
         .post("/api/chats")
-        .send({ user1_id: 1, user2_id: 10 })
+        .set("authorization", token)
+        .send({ user2_id: 10 })
         .end((err, res) => {
           const { messages } = res.body;
           const { chat_id } = res.body;
@@ -979,7 +991,8 @@ describe("Messages", () => {
       chai
         .request(app)
         .post("/api/chats")
-        .send({ user1_id: 1 })
+        .set("authorization", token)
+        .send({})
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal("Missing a user id");
@@ -990,7 +1003,8 @@ describe("Messages", () => {
       chai
         .request(app)
         .post("/api/chats")
-        .send({ user1_id: 1, user2_id: 1 })
+        .set("authorization", token)
+        .send({ user2_id: 1 })
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal("Can't message yourself");
@@ -1001,7 +1015,8 @@ describe("Messages", () => {
       chai
         .request(app)
         .post("/api/chats")
-        .send({ user1_id: 1, user2_id: "onion" })
+        .set("authorization", token)
+        .send({ user2_id: "onion" })
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal("One or both user ids are invalid");
@@ -1012,7 +1027,8 @@ describe("Messages", () => {
       chai
         .request(app)
         .post("/api/chats")
-        .send({ user1_id: 10, user2_id: 49 })
+        .set("authorization", token)
+        .send({ user2_id: 49 })
         .end((err, res) => {
           expect(res).to.have.status(404);
           expect(res.body.msg).to.equal("One or both users don't exist");
@@ -1024,11 +1040,23 @@ describe("Messages", () => {
     beforeEach(() => {
       return seed(data);
     });
+    let token;
+    chai
+      .request(app)
+      .post("/api/users/login")
+      .send({
+        email: "jalkin0@odnoklassniki.ru",
+        password: "yE4`h6|86#(",
+      })
+      .end((err, res) => {
+        token = res.headers.authorization;
+      });
     it("should respond with a status 201 the id of the new message", (done) => {
       chai
         .request(app)
-        .post("/api/messages/1")
-        .send({ sender_id: 2, message: "This is a test message" })
+        .post("/api/messages/2")
+        .set("authorization", token)
+        .send({ message: "This is a test message" })
         .end((err, res) => {
           const { newMessageId } = res.body;
           expect(res).to.have.status(201);
