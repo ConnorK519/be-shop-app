@@ -36,11 +36,8 @@ describe("User", () => {
           street: "Sample Street",
         })
         .end((err, res) => {
-          const userData = res.body.user;
           expect(res).to.have.status(201);
           expect(res.headers).to.have.property("authorization");
-          expect(userData).to.have.property("user_id");
-          expect(userData).to.have.property("username");
           done();
         });
     });
@@ -385,41 +382,31 @@ describe("User", () => {
           password: "yE4`h6|86#(",
         })
         .end((err, res) => {
-          const userData = res.body.user;
           expect(res).to.have.status(200);
-          expect(userData).to.have.property("user_id");
-          expect(userData).to.have.property("username");
+          expect(res.headers).to.have.property("authorization");
           done();
         });
     });
 
     it("should respond with a status 400 and an error message if passed an incorrect email or password", async () => {
-      const res1 = await chai
-        .request(app)
-        .post("/api/users/login")
-        .send({
-          email: "jalkin0@odnoklassniki.ru",
-          password: "yE4`h6|86#",
-        })
+      const res1 = await chai.request(app).post("/api/users/login").send({
+        email: "jalkin0@odnoklassniki.ru",
+        password: "yE4`h6|86#",
+      });
 
-          expect(res1).to.have.status(400);
-          expect(res1.body.msg).to.equal("Invalid email or password");
-        
+      expect(res1).to.have.status(400);
+      expect(res1.body.msg).to.equal("Invalid email or password");
 
-      const res2 = await chai
-        .request(app)
-        .post("/api/users/login")
-        .send({
-          email: "jalkin0@odnoklassniki.r",
-          password: "yE4`h6|86#(",
-        })
-          expect(res2).to.have.status(400);
-          expect(res2.body.msg).to.equal("Invalid email or password");
-          /*
+      const res2 = await chai.request(app).post("/api/users/login").send({
+        email: "jalkin0@odnoklassniki.r",
+        password: "yE4`h6|86#(",
+      });
+      expect(res2).to.have.status(400);
+      expect(res2.body.msg).to.equal("Invalid email or password");
+      /*
           I know this is inconsistent, but I built a new pc and my tests started failing for no reason on the new machine changing this to an async function seems 
           to have fixed the weird bug where it would pass at times, but fail at others I have checked manually and the test are returning expected responses
           */
-      
     });
 
     it("should respond with a status 400 and an error message if a required field is missing", (done) => {
@@ -483,14 +470,26 @@ describe("User", () => {
     });
   });
 
-  describe("PATCH /api/user/:user_id", () => {
+  describe("PATCH /api/users", () => {
     beforeEach(() => {
       return seed(data);
     });
+    let token;
+    chai
+      .request(app)
+      .post("/api/users/login")
+      .send({
+        email: "jalkin0@odnoklassniki.ru",
+        password: "yE4`h6|86#(",
+      })
+      .end((err, res) => {
+        token = res.headers.authorization;
+      });
     it("should respond with a status 200 and a message after successfully updating a user", (done) => {
       chai
         .request(app)
-        .patch("/api/users/1")
+        .patch("/api/users")
+        .set("authorization", token)
         .send({ username: "newUsername" })
         .end((err, res) => {
           expect(res).to.have.status(200);
@@ -502,7 +501,8 @@ describe("User", () => {
     it("should respond with a status 400 and an error message if passed bad fields", (done) => {
       chai
         .request(app)
-        .patch("/api/users/1")
+        .patch("/api/users")
+        .set("authorization", token)
         .send({ bad_field: "this field should cause an error" })
         .end((err, res) => {
           expect(res).to.have.status(400);
@@ -511,6 +511,20 @@ describe("User", () => {
         });
     });
 
+    it("should respond with a status 400 and an error message if passed an empty object", (done) => {
+      chai
+        .request(app)
+        .patch("/api/users")
+        .set("authorization", token)
+        .send({})
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("No valid fields found to update");
+          done();
+        });
+    });
+    /*
+    -------------Tests Invalidated by the implementation of jwt this comment is to document previous implementation-----------
     it("should respond with a status 400 and an error message when passed an invalid id type", (done) => {
       chai
         .request(app)
@@ -523,19 +537,7 @@ describe("User", () => {
         });
     });
 
-    it("should respond with a status 400 and an error message if passed an empty object", (done) => {
-      chai
-        .request(app)
-        .patch("/api/users/1")
-        .send({})
-        .end((err, res) => {
-          expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("No valid fields found to update");
-          done();
-        });
-    });
-
-    it("should respond with a status 404 and an error message when passed a user id that doesn't exist", (done) => {
+        it("should respond with a status 404 and an error message when passed a user id that doesn't exist", (done) => {
       chai
         .request(app)
         .patch("/api/users/99")
@@ -546,33 +548,45 @@ describe("User", () => {
           done();
         });
     });
+    */
   });
 
-  describe("DELETE /api/users/:user_id", () => {
+  describe("DELETE /api/users", () => {
     beforeEach(() => {
       return seed(data);
     });
     it("should successfully delete a user then respond with a status 204", (done) => {
       chai
         .request(app)
-        .delete("/api/users/1")
+        .post("/api/users/login")
+        .send({
+          email: "jalkin0@odnoklassniki.ru",
+          password: "yE4`h6|86#(",
+        })
         .end((err, res) => {
-          expect(res).to.have.status(204);
-          return chai
+          chai
             .request(app)
-            .post("/api/users/login")
-            .send({
-              email: "jalkin0@odnoklassniki.ru",
-              password: "yE4`h6|86#(",
-            })
+            .delete("/api/users")
+            .set("authorization", res.headers.authorization)
             .end((err, res) => {
-              expect(res).to.have.status(400);
-              expect(res.body.msg).to.equal("Invalid email or password");
-              done();
+              expect(res).to.have.status(204);
+              return chai
+                .request(app)
+                .post("/api/users/login")
+                .send({
+                  email: "jalkin0@odnoklassniki.ru",
+                  password: "yE4`h6|86#(",
+                })
+                .end((err, res) => {
+                  expect(res).to.have.status(400);
+                  expect(res.body.msg).to.equal("Invalid email or password");
+                  done();
+                });
             });
         });
     });
-
+    /*
+     -------------Tests Invalidated by the implementation of jwt this comment is to document previous implementation-----------
     it("should respond with a status 404 and an error message if passed an id that doesn't exist", (done) => {
       chai
         .request(app)
@@ -594,6 +608,7 @@ describe("User", () => {
           done();
         });
     });
+    */
   });
 });
 
@@ -671,12 +686,22 @@ describe("Products", () => {
     beforeEach(() => {
       return seed(data);
     });
+    chai
+      .request(app)
+      .post("/api/users/login")
+      .send({
+        email: "jalkin0@odnoklassniki.ru",
+        password: "yE4`h6|86#(",
+      })
+      .end((err, res) => {
+        token = res.headers.authorization;
+      });
     it("should successfully post a product and respond with a status 201", (done) => {
       chai
         .request(app)
         .post("/api/products")
+        .set("authorization", token)
         .send({
-          seller_id: 4,
           product_name: "Test Item",
           description: "Test Worked if this is listed",
           price: 1.21,
@@ -694,25 +719,8 @@ describe("Products", () => {
       chai
         .request(app)
         .post("/api/products")
+        .set("authorization", token)
         .send({
-          product_name: "Test Item",
-          description: "Test Failed if this is listed",
-          price: 1.21,
-          stock: 1,
-          category: "testing",
-        })
-        .end((err, res) => {
-          expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal(
-            "Missing required input field seller id"
-          );
-        });
-
-      chai
-        .request(app)
-        .post("/api/products")
-        .send({
-          seller_id: 4,
           description: "Test Failed if this is listed",
           price: 1.21,
           stock: 1,
@@ -728,8 +736,8 @@ describe("Products", () => {
       chai
         .request(app)
         .post("/api/products")
+        .set("authorization", token)
         .send({
-          seller_id: 4,
           product_name: "Test Item",
           price: 1.21,
           stock: 1,
@@ -745,8 +753,8 @@ describe("Products", () => {
       chai
         .request(app)
         .post("/api/products")
+        .set("authorization", token)
         .send({
-          seller_id: 4,
           product_name: "Test Item",
           description: "Test Failed if this is listed",
           stock: 1,
@@ -760,8 +768,8 @@ describe("Products", () => {
       chai
         .request(app)
         .post("/api/products")
+        .set("authorization", token)
         .send({
-          seller_id: 4,
           product_name: "Test Item",
           description: "Test Failed if this is listed",
           price: 1.21,
@@ -775,8 +783,8 @@ describe("Products", () => {
       chai
         .request(app)
         .post("/api/products")
+        .set("authorization", token)
         .send({
-          seller_id: 4,
           product_name: "Test Item",
           description: "Test Failed if this is listed",
           price: 1.21,
@@ -795,8 +803,8 @@ describe("Products", () => {
       chai
         .request(app)
         .post("/api/products")
+        .set("authorization", token)
         .send({
-          seller_id: 4,
           product_name: "Test Item",
           description: "Test Worked if this is listed",
           price: "hello",
@@ -828,7 +836,6 @@ describe("Messages", () => {
       .end((err, res) => {
         token = res.headers.authorization;
       });
-
     it("should respond with an array of the provided users chats in descending order by time of the last message and a status 200", (done) => {
       chai
         .request(app)
@@ -888,11 +895,23 @@ describe("Messages", () => {
     beforeEach(() => {
       return seed(data);
     });
+    let token;
+    chai
+      .request(app)
+      .post("/api/users/login")
+      .send({
+        email: "jalkin0@odnoklassniki.ru",
+        password: "yE4`h6|86#(",
+      })
+      .end((err, res) => {
+        token = res.headers.authorization;
+      });
     it("should respond with a status 200 and an array of messages in descending order by time for the passed chat", (done) => {
-      const chatId = 1;
+      const chatId = 2;
       chai
         .request(app)
         .get(`/api/messages/${chatId}`)
+        .set("authorization", token)
         .end((err, res) => {
           const { messages } = res.body;
           expect(res).to.have.status(200);
@@ -910,21 +929,12 @@ describe("Messages", () => {
           done();
         });
     });
-    it("should respond with a status 200 and an empty array if passed a chat id that does not exist yet", (done) => {
-      chai
-        .request(app)
-        .get("/api/messages/100")
-        .end((err, res) => {
-          const { messages } = res.body;
-          expect(res).to.have.status(200);
-          expect(messages).to.have.length(0);
-          done();
-        });
-    });
+
     it("should respond with a status 400 and an error message if passed an invalid chat_id", (done) => {
       chai
         .request(app)
         .get("/api/messages/notAnId")
+        .set("authorization", token)
         .end((err, res) => {
           expect(res).to.have.status(400);
           expect(res.body.msg).to.equal("Invalid chat id");
@@ -932,6 +942,20 @@ describe("Messages", () => {
         });
     });
   });
+  /*
+  -------------Tests Invalidated by the implementation of jwt this comment is to document previous implementation-----------
+  it("should respond with a status 200 and an empty array if passed a chat id that does not exist yet", (done) => {
+    chai
+      .request(app)
+      .get("/api/messages/100")
+      .end((err, res) => {
+        const { messages } = res.body;
+        expect(res).to.have.status(200);
+        expect(messages).to.have.length(0);
+        done();
+      });
+  });
+  */
   describe("POST /api/chats", () => {
     beforeEach(() => {
       return seed(data);

@@ -8,20 +8,13 @@ const {
   updateChatById,
 } = require("../models/messages.models");
 
-const {
-  selectUsersAndChat,
-  selectUserById,
-} = require("../models/users.models");
+const { selectUsersAndChat } = require("../models/users.models");
 
 exports.getChatsByUserId = (req, res, next) => {
   const { user_id } = req.user;
 
   const getUserChats = new Promise((resolve, reject) => {
-    const IdCheck = !isNaN(user_id) && user_id > 0;
-    if (!IdCheck) {
-      return reject({ status: 400, msg: "Invalid user id" });
-    }
-    return resolve(selectChatsByUserId(user_id));
+    resolve(selectChatsByUserId(user_id));
   });
 
   getUserChats
@@ -33,11 +26,12 @@ exports.getChatsByUserId = (req, res, next) => {
 
 exports.getMessagesByChatId = (req, res, next) => {
   const { chat_id } = req.params;
+  const { user_id } = req.user;
 
   const getMessages = new Promise((resolve, reject) => {
     const IdCheck = !isNaN(chat_id) && chat_id > 0;
     if (IdCheck) {
-      return resolve(selectMessagesByChatId(chat_id));
+      return resolve(selectMessagesByChatId(chat_id, user_id));
     }
     reject({ status: 400, msg: "Invalid chat id" });
   });
