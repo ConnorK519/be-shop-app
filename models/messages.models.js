@@ -46,15 +46,16 @@ exports.selectMessagesByChatId = (chat_id, user_id) => {
     });
 };
 
-exports.insertNewChat = (user1_id, user2_id) => {
+exports.insertNewChat = (user1_id, user2_id, currentDate) => {
   return db.query(
     `INSERT INTO chats (
     user1_id,
-    user2_id
+    user2_id,
+    last_message_time
   )
-  VALUES (?, ?)
+  VALUES (?, ?, ?)
   `,
-    [user1_id, user2_id]
+    [user1_id, user2_id, currentDate]
   );
 };
 

@@ -78,7 +78,11 @@ exports.postNewChatOrGetChat = (req, res, next) => {
           msg: "One or both users don't exist",
         });
       }
-      return Promise.all([chat_id, insertNewChat(user1_id, user2_id)]);
+      const currentDate = dayjs().format("YYYY-MM-DD HH-mm-ss");
+      return Promise.all([
+        chat_id,
+        insertNewChat(user1_id, user2_id, currentDate),
+      ]);
     })
     .then(([chat_id, insertData]) => {
       if (!chat_id) {
@@ -88,7 +92,7 @@ exports.postNewChatOrGetChat = (req, res, next) => {
       return [chat_id];
     })
     .then(([chat_id]) => {
-      return Promise.all([selectMessagesByChatId(chat_id), chat_id]);
+      return Promise.all([selectMessagesByChatId(chat_id, user1_id), chat_id]);
     })
     .then(([messages, chat_id]) => {
       res.status(200).send({ messages, chat_id });
