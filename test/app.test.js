@@ -1051,7 +1051,7 @@ describe("Messages", () => {
       .end((err, res) => {
         token = res.headers.authorization;
       });
-    it("should respond with a status 201 the id of the new message", (done) => {
+    it("should respond with a status 201 and the id of the new message", (done) => {
       chai
         .request(app)
         .post("/api/messages/2")
