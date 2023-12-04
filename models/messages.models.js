@@ -23,16 +23,16 @@ exports.selectChatsByUserId = (user_id) => {
     });
 };
 
-exports.selectMessagesByChatId = (chat_id) => {
+exports.selectMessagesByChatId = (chat_id, user_id) => {
   return db
     .query(
       `
      SELECT chats.chat_id, messages.*, users.username FROM chats 
      JOIN messages ON chats.chat_id = messages.chat_id
      LEFT JOIN users ON messages.sender_id = users.user_id
-     WHERE chats.chat_id = ?
+     WHERE chats.chat_id = ? AND chats.user1_id = ? OR chats.chat_id = ? AND chats.user2_id = ?
      ORDER BY messages.sent_at DESC`,
-      chat_id
+      [chat_id, user_id, chat_id, user_id]
     )
     .then((rows) => {
       const messages = rows[0];
@@ -46,15 +46,16 @@ exports.selectMessagesByChatId = (chat_id) => {
     });
 };
 
-exports.insertNewChat = (user1_id, user2_id) => {
+exports.insertNewChat = (user1_id, user2_id, currentDate) => {
   return db.query(
     `INSERT INTO chats (
     user1_id,
-    user2_id
+    user2_id,
+    last_message_time
   )
-  VALUES (?, ?)
+  VALUES (?, ?, ?)
   `,
-    [user1_id, user2_id]
+    [user1_id, user2_id, currentDate]
   );
 };
 

@@ -8,29 +8,16 @@ const {
   updateChatById,
 } = require("../models/messages.models");
 
-const {
-  selectUsersAndChat,
-  selectUserById,
-} = require("../models/users.models");
+const { selectUsersAndChat } = require("../models/users.models");
 
 exports.getChatsByUserId = (req, res, next) => {
-  const { user_id } = req.params;
+  const { user_id } = req.user;
 
-  const checkUser = new Promise((resolve, reject) => {
-    const IdCheck = !isNaN(user_id) && user_id > 0;
-    if (IdCheck) {
-      return resolve(selectUserById(user_id));
-    }
-    reject({ status: 400, msg: "Invalid user id" });
+  const getUserChats = new Promise((resolve, reject) => {
+    resolve(selectChatsByUserId(user_id));
   });
 
-  checkUser
-    .then((user) => {
-      if (user) {
-        return selectChatsByUserId(user_id);
-      }
-      return Promise.reject({ status: 404, msg: "User not found" });
-    })
+  getUserChats
     .then((chats) => {
       res.status(200).send({ chats });
     })
@@ -39,11 +26,12 @@ exports.getChatsByUserId = (req, res, next) => {
 
 exports.getMessagesByChatId = (req, res, next) => {
   const { chat_id } = req.params;
+  const { user_id } = req.user;
 
   const getMessages = new Promise((resolve, reject) => {
     const IdCheck = !isNaN(chat_id) && chat_id > 0;
     if (IdCheck) {
-      return resolve(selectMessagesByChatId(chat_id));
+      return resolve(selectMessagesByChatId(chat_id, user_id));
     }
     reject({ status: 400, msg: "Invalid chat id" });
   });
@@ -56,13 +44,13 @@ exports.getMessagesByChatId = (req, res, next) => {
 };
 
 exports.postNewChatOrGetChat = (req, res, next) => {
-  const { user1_id, user2_id } = req.body;
+  const user1_id = req.user.user_id;
+  const { user2_id } = req.body;
 
   const checkForChat = new Promise((resolve, reject) => {
-    const numberCheck = !isNaN(user1_id) && !isNaN(user2_id);
-    const positiveCheck = user1_id > 0 && user2_id > 0;
+    const IdCheck = user2_id > 0 || !isNaN(user2_id);
 
-    if (!user1_id || !user2_id) {
+    if (!user2_id) {
       return reject({ status: 400, msg: "Missing a user id" });
     }
 
@@ -70,10 +58,10 @@ exports.postNewChatOrGetChat = (req, res, next) => {
       return reject({ status: 400, msg: "Can't message yourself" });
     }
 
-    if (numberCheck && positiveCheck) {
+    if (IdCheck) {
       resolve(selectUsersAndChat(user1_id, user2_id));
     } else {
-      reject({ status: 400, msg: "One or both user ids are invalid" });
+      reject({ status: 400, msg: "Target user id is invalid" });
     }
   });
 
@@ -89,7 +77,11 @@ exports.postNewChatOrGetChat = (req, res, next) => {
           msg: "One or both users don't exist",
         });
       }
-      return Promise.all([chat_id, insertNewChat(user1_id, user2_id)]);
+      const currentDate = dayjs().format("YYYY-MM-DD HH-mm-ss");
+      return Promise.all([
+        chat_id,
+        insertNewChat(user1_id, user2_id, currentDate),
+      ]);
     })
     .then(([chat_id, insertData]) => {
       if (!chat_id) {
@@ -99,7 +91,7 @@ exports.postNewChatOrGetChat = (req, res, next) => {
       return [chat_id];
     })
     .then(([chat_id]) => {
-      return Promise.all([selectMessagesByChatId(chat_id), chat_id]);
+      return Promise.all([selectMessagesByChatId(chat_id, user1_id), chat_id]);
     })
     .then(([messages, chat_id]) => {
       res.status(200).send({ messages, chat_id });
@@ -109,17 +101,18 @@ exports.postNewChatOrGetChat = (req, res, next) => {
 
 exports.postMessageToChatById = (req, res, next) => {
   const { chat_id } = req.params;
-  const { sender_id, message } = req.body;
+  const { message } = req.body;
+  const sender_id = req.user.user_id;
+
   const currentDate = dayjs().format("YYYY-MM-DD HH-mm-ss");
   const chatIdCheck = isNaN(chat_id) || chat_id < 0;
-  const senderIdCheck = isNaN(sender_id) || sender_id < 0;
 
   const patchChat = new Promise((resolve, reject) => {
     if (!message) {
       return reject({ status: 400, msg: "No message input" });
     }
-    if (chatIdCheck || senderIdCheck) {
-      return reject({ status: 400, msg: "One or more invalid ids" });
+    if (chatIdCheck) {
+      return reject({ status: 400, msg: "Invalid chat id" });
     }
     resolve(updateChatById(message, currentDate, chat_id, sender_id));
   });

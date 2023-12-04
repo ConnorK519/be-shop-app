@@ -1,4 +1,4 @@
 node_modules
 .env.*
-myKey.json
-testProduct.html
+.vscode
+test.REST.*

@@ -37,21 +37,13 @@ exports.getProductById = (req, res, next) => {
 };
 
 exports.postProduct = (req, res, next) => {
-  const { seller_id, product_name, description, price, stock, category } =
-    req.body;
+  const { product_name, description, price, stock, category } = req.body;
+  const { user_id } = req.user;
 
   const listProduct = new Promise((resolve, reject) => {
-    if (
-      !seller_id ||
-      !product_name ||
-      !description ||
-      !price ||
-      !stock ||
-      !category
-    ) {
+    if (!product_name || !description || !price || !stock || !category) {
       const missingFields = [];
       const allFields = [
-        "seller_id",
         "product_name",
         "description",
         "price",
@@ -74,11 +66,10 @@ exports.postProduct = (req, res, next) => {
       });
     }
     const currentDate = dayjs().format("YYYY-MM-DD HH-mm-ss");
-    const fileName = `${product_name}-${Date.now()}-${seller_id}`;
+    const fileName = `${product_name}-${Date.now()}`;
     let imageURL = null;
 
     const validFields = {
-      seller_id: ["number", 0],
       product_name: ["string", 1, 100],
       description: ["string", 1, 1000],
       price: ["number", 0],
@@ -144,7 +135,7 @@ exports.postProduct = (req, res, next) => {
 
     return resolve(
       insertProduct([
-        seller_id,
+        user_id,
         imageURL,
         product_name,
         description,

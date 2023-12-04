@@ -42,23 +42,28 @@ app.post("/api/users/register", userRegisterLimit, postUser);
 
 app.post("/api/users/login", userLoginLimit, postUserLogin);
 
-app.patch("/api/users/:user_id", patchUserById);
+app.patch("/api/users", authenticateToken, patchUserById);
 
-app.delete("/api/users/:user_id", deleteUserById);
+app.delete("/api/users", authenticateToken, deleteUserById);
 
 app.get("/api/products", getProducts);
 
 app.get("/api/products/:product_id", getProductById);
 
-app.post("/api/products", upload.single("image"), postProduct);
+app.post(
+  "/api/products",
+  authenticateToken,
+  upload.single("image"),
+  postProduct
+);
 
-app.get("/api/chats/:user_id", authenticateToken, getChatsByUserId);
+app.get("/api/chats", authenticateToken, getChatsByUserId);
 
-app.get("/api/messages/:chat_id", getMessagesByChatId);
+app.get("/api/messages/:chat_id", authenticateToken, getMessagesByChatId);
 
-app.post("/api/chats", postNewChatOrGetChat);
+app.post("/api/chats", authenticateToken, postNewChatOrGetChat);
 
-app.post("/api/messages/:chat_id", postMessageToChatById);
+app.post("/api/messages/:chat_id", authenticateToken, postMessageToChatById);
 
 app.use(handleCustomErrors);
 

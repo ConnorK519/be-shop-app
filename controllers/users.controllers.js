@@ -172,13 +172,13 @@ exports.postUser = (req, res, next) => {
     .then((inputData) => {
       const newUser = {};
       newUser.user_id = inputData[0].insertId;
+      newUser.username = username;
       return newUser;
     })
     .then((user) => {
       const accessToken = jwt.sign(user, process.env.JWT_SECRET);
       res.setHeader("authorization", `Bearer ${accessToken}`);
-      user.username = username;
-      res.status(201).send({ user });
+      res.status(201).send();
     })
     .catch(next);
 };
@@ -258,7 +258,7 @@ exports.postUserLogin = (req, res, next) => {
       return Promise.all(userLoginResponse);
     })
     .then(([user, correctPassword, failedAttempts]) => {
-      const { user_id, username, basket } = user;
+      const { user_id, username } = user;
       if (!correctPassword) {
         if (failedAttempts >= loginAttemptLimit) {
           return Promise.reject({
@@ -271,35 +271,23 @@ exports.postUserLogin = (req, res, next) => {
           msg: "Invalid email or password",
         });
       }
-      const userResponse = { user_id };
+      const userResponse = { user_id, username };
       const accessToken = jwt.sign(userResponse, process.env.JWT_SECRET);
       res.setHeader("authorization", `Bearer ${accessToken}`);
-      userResponse.username = username;
-      userResponse.basket = JSON.parse(basket);
-      res.status(200).send({ user: userResponse });
+      res.status(200).send();
     })
     .catch(next);
 };
 
 exports.patchUserById = (req, res, next) => {
-  const { user_id } = req.params;
+  const { user_id } = req.user;
   const updatedUser = req.body;
 
-  const checkUserId = new Promise((resolve, reject) => {
-    if (!isNaN(user_id)) {
-      resolve(selectUserById(user_id));
-    } else {
-      reject({ status: 400, msg: "Invalid user id" });
-    }
+  const updateUser = new Promise((resolve, reject) => {
+    resolve(updateUserById(user_id, updatedUser));
   });
 
-  checkUserId
-    .then((userExists) => {
-      if (!userExists) {
-        return Promise.reject({ status: 404, msg: "No user found" });
-      }
-      return updateUserById(user_id, updatedUser);
-    })
+  updateUser
     .then(() => {
       res.status(200).send({ msg: "User updated" });
     })
@@ -307,24 +295,13 @@ exports.patchUserById = (req, res, next) => {
 };
 
 exports.deleteUserById = (req, res, next) => {
-  const { user_id } = req.params;
+  const { user_id } = req.user;
 
-  const checkUserExists = new Promise((resolve, reject) => {
-    if (!isNaN(user_id)) {
-      resolve(selectUserById(user_id));
-    } else {
-      reject({ status: 400, msg: "invalid user id" });
-    }
+  const deletePassedUser = new Promise((resolve, reject) => {
+    resolve(deleteUser(user_id));
   });
 
-  checkUserExists
-    .then((user) => {
-      if (user) {
-        return deleteUser(user_id);
-      } else {
-        return Promise.reject({ status: 404, msg: "No user found" });
-      }
-    })
+  deletePassedUser
     .then(() => {
       return updateUserProductsById(user_id);
     })
