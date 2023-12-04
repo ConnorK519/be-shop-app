@@ -48,10 +48,9 @@ exports.postNewChatOrGetChat = (req, res, next) => {
   const { user2_id } = req.body;
 
   const checkForChat = new Promise((resolve, reject) => {
-    const numberCheck = !isNaN(user1_id) && !isNaN(user2_id);
-    const positiveCheck = user1_id > 0 && user2_id > 0;
+    const IdCheck = user2_id > 0 || !isNaN(user2_id);
 
-    if (!user1_id || !user2_id) {
+    if (!user2_id) {
       return reject({ status: 400, msg: "Missing a user id" });
     }
 
@@ -59,10 +58,10 @@ exports.postNewChatOrGetChat = (req, res, next) => {
       return reject({ status: 400, msg: "Can't message yourself" });
     }
 
-    if (numberCheck && positiveCheck) {
+    if (IdCheck) {
       resolve(selectUsersAndChat(user1_id, user2_id));
     } else {
-      reject({ status: 400, msg: "One or both user ids are invalid" });
+      reject({ status: 400, msg: "Target user id is invalid" });
     }
   });
 

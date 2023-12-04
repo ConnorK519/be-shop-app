@@ -1019,7 +1019,7 @@ describe("Messages", () => {
         .send({ user2_id: "onion" })
         .end((err, res) => {
           expect(res).to.have.status(400);
-          expect(res.body.msg).to.equal("One or both user ids are invalid");
+          expect(res.body.msg).to.equal("Target user id is invalid");
           done();
         });
     });
