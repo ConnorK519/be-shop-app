@@ -373,7 +373,7 @@ describe("User", () => {
     beforeEach(() => {
       return seed(data);
     });
-    it("should respond with a status 200 and an object containing the users data if passed a matching email and password", (done) => {
+    it("should respond with a status 200 and a auth token to authorize future requests if passed a matching email and password", (done) => {
       chai
         .request(app)
         .post("/api/users/login")
@@ -523,6 +523,31 @@ describe("User", () => {
           done();
         });
     });
+
+    it("should respond with a status 401 and an error message if no authorization header is set", (done) => {
+      chai
+        .request(app)
+        .patch("/api/users")
+        .send({ username: "newUsername" })
+        .end((err, res) => {
+          expect(res).to.have.status(401);
+          expect(res.body.msg).to.equal("No token");
+          done();
+        });
+    });
+
+    it("should respond with a status 403 and an error message if an invalid authorization header is sent", (done) => {
+      chai
+        .request(app)
+        .patch("/api/users")
+        .set("authorization", "Bad Token")
+        .send({ username: "newUsername" })
+        .end((err, res) => {
+          expect(res).to.have.status(403);
+          expect(res.body.msg).to.equal("Token expired or invalid");
+          done();
+        });
+    });
     /*
     -------------Tests Invalidated by the implementation of jwt this comment is to document previous implementation-----------
     it("should respond with a status 400 and an error message when passed an invalid id type", (done) => {
@@ -570,7 +595,7 @@ describe("User", () => {
             .set("authorization", res.headers.authorization)
             .end((err, res) => {
               expect(res).to.have.status(204);
-              return chai
+              chai
                 .request(app)
                 .post("/api/users/login")
                 .send({
@@ -582,6 +607,49 @@ describe("User", () => {
                   expect(res.body.msg).to.equal("Invalid email or password");
                   done();
                 });
+            });
+        });
+    });
+
+    it("should respond with a status 401 and an error message if no authorization header is set", (done) => {
+      chai
+        .request(app)
+        .delete("/api/users")
+        .end((err, res) => {
+          expect(res).to.have.status(401);
+          expect(res.body.msg).to.equal("No token");
+          chai
+            .request(app)
+            .post("/api/users/login")
+            .send({
+              email: "jalkin0@odnoklassniki.ru",
+              password: "yE4`h6|86#(",
+            })
+            .end((err, res) => {
+              expect(res).to.have.status(200);
+              done();
+            });
+        });
+    });
+
+    it("should respond with a status 403 and an error message if an invalid authorization header is set", (done) => {
+      chai
+        .request(app)
+        .delete("/api/users")
+        .set("authorization", "Bad Token")
+        .end((err, res) => {
+          expect(res).to.have.status(403);
+          expect(res.body.msg).to.equal("Token expired or invalid");
+          chai
+            .request(app)
+            .post("/api/users/login")
+            .send({
+              email: "jalkin0@odnoklassniki.ru",
+              password: "yE4`h6|86#(",
+            })
+            .end((err, res) => {
+              expect(res).to.have.status(200);
+              done();
             });
         });
     });
@@ -817,6 +885,24 @@ describe("Products", () => {
           done();
         });
     });
+
+    it("should respond with a status 401 and an error message if no authorization header is set", (done) => {
+      chai
+        .request(app)
+        .post("/api/products")
+        .send({
+          product_name: "Test Item",
+          description: "Test Worked if this is listed",
+          price: 1.21,
+          stock: 1,
+          category: "testing",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(401);
+          expect(res.body.msg).to.equal("No token");
+          done();
+        });
+    });
   });
 });
 
@@ -865,6 +951,16 @@ describe("Messages", () => {
         });
     });
 
+    it("should respond with a status 401 and an error message if no authorization header is set", (done) => {
+      chai
+        .request(app)
+        .get("/api/chats")
+        .end((err, res) => {
+          expect(res).to.have.status(401);
+          expect(res.body.msg).to.equal("No token");
+          done();
+        });
+    });
     /*
    -------------Tests Invalidated by the implementation of jwt this comment is to document previous implementation-----------
     it("should respond with a status 400 and an error message if passed an invalid user id", (done) => {
@@ -930,6 +1026,19 @@ describe("Messages", () => {
         });
     });
 
+    it("should respond with a status 200 and an empty array if passed a chat id that does not exist yet", (done) => {
+      chai
+        .request(app)
+        .get("/api/messages/100")
+        .set("authorization", token)
+        .end((err, res) => {
+          const { messages } = res.body;
+          expect(res).to.have.status(200);
+          expect(messages).to.have.length(0);
+          done();
+        });
+    });
+
     it("should respond with a status 400 and an error message if passed an invalid chat_id", (done) => {
       chai
         .request(app)
@@ -941,21 +1050,18 @@ describe("Messages", () => {
           done();
         });
     });
+    it("should respond with a status 401 and an error message if no authorization header is set", (done) => {
+      chai
+        .request(app)
+        .get(`/api/messages/2`)
+        .end((err, res) => {
+          expect(res).to.have.status(401);
+          expect(res.body.msg).to.equal("No token");
+          done();
+        });
+    });
   });
-  /*
-  -------------Tests Invalidated by the implementation of jwt this comment is to document previous implementation-----------
-  it("should respond with a status 200 and an empty array if passed a chat id that does not exist yet", (done) => {
-    chai
-      .request(app)
-      .get("/api/messages/100")
-      .end((err, res) => {
-        const { messages } = res.body;
-        expect(res).to.have.status(200);
-        expect(messages).to.have.length(0);
-        done();
-      });
-  });
-  */
+
   describe("POST /api/chats", () => {
     beforeEach(() => {
       return seed(data);
