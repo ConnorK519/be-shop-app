@@ -1,8 +1,9 @@
 const db = require("../db/connection");
 
 exports.insertUser = (newUser) => {
-  return db.query(
-    `INSERT INTO users (
+  return db
+    .query(
+      `INSERT INTO users (
     username,
     first_name,
     last_name,
@@ -17,8 +18,11 @@ exports.insertUser = (newUser) => {
   )
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
-    newUser
-  );
+      newUser
+    )
+    .then((result) => {
+      return result;
+    });
 };
 
 exports.checkEmailAndUsername = (email, username) => {
@@ -72,25 +76,33 @@ exports.selectUsersAndChat = (user1_id, user2_id) => {
 };
 
 exports.updateUserLoginAttempts = (number, user_id) => {
-  return db.query(
-    `
+  return db
+    .query(
+      `
   UPDATE users
   SET login_attempts = ?
   WHERE user_id = ?
   `,
-    [number, user_id]
-  );
+      [number, user_id]
+    )
+    .then((result) => {
+      return result;
+    });
 };
 
 exports.updateUserLockedTill = (date, user_id) => {
-  return db.query(
-    `
+  return db
+    .query(
+      `
   UPDATE users
   SET locked_till = ?
   WHERE user_id = ?
   `,
-    [date, user_id]
-  );
+      [date, user_id]
+    )
+    .then((result) => {
+      return result;
+    });
 };
 
 exports.updateUserById = (user_id, updatedUser) => {
@@ -145,7 +157,9 @@ exports.updateUserById = (user_id, updatedUser) => {
 
   if (fieldsToUpdate.length > 0) {
     const query = `UPDATE users SET ${fieldsToUpdate} WHERE user_id = ?`;
-    return db.query(query, values);
+    return db.query(query, values).then((result) => {
+      return result;
+    });
   } else {
     return Promise.reject({
       status: 400,
@@ -155,15 +169,23 @@ exports.updateUserById = (user_id, updatedUser) => {
 };
 
 exports.deleteUser = (user_id) => {
-  return db.query(`DELETE FROM users WHERE user_id = ?`, user_id);
+  return db
+    .query(`DELETE FROM users WHERE user_id = ?`, user_id)
+    .then((result) => {
+      return result;
+    });
 };
 
 exports.updateUserProductsById = (seller_id) => {
-  return db.query(
-    `
+  return db
+    .query(
+      `
     UPDATE products
     SET seller_id = NULL
     WHERE seller_id = ?`,
-    seller_id
-  );
+      seller_id
+    )
+    .then((result) => {
+      return result;
+    });
 };

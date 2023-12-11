@@ -20,7 +20,7 @@ describe("User", () => {
     beforeEach(() => {
       return seed(data);
     });
-    it("should successfully post a user to the database and respond with a status 201 and the user data", (done) => {
+    it("should successfully post a user to the database and respond with a status 201 and a jwt for authorizing future requests", (done) => {
       chai
         .request(app)
         .post("/api/users/register")
@@ -327,7 +327,7 @@ describe("User", () => {
         });
     });
 
-    it("should respond with a status 409 and an error if a user already exists with an email or username", (done) => {
+    it("should respond with a status 409 and an error message if the passed username or email is already in use", (done) => {
       chai
         .request(app)
         .post("/api/users/register")
@@ -903,6 +903,25 @@ describe("Products", () => {
           done();
         });
     });
+
+    it("should respond with a status 403 and an error message if an invalid authorization header is set", (done) => {
+      chai
+        .request(app)
+        .post("/api/products")
+        .set("authorization", "Bad Token")
+        .send({
+          product_name: "Test Item",
+          description: "Test Worked if this is listed",
+          price: 1.21,
+          stock: 1,
+          category: "testing",
+        })
+        .end((err, res) => {
+          expect(res).to.have.status(403);
+          expect(res.body.msg).to.equal("Token expired or invalid");
+          done();
+        });
+    });
   });
 });
 
@@ -961,6 +980,18 @@ describe("Messages", () => {
           done();
         });
     });
+
+    it("should respond with a status 403 and an error message if an invalid authorization header is set", (done) => {
+      chai
+        .request(app)
+        .get("/api/chats")
+        .set("authorization", "Bad Token")
+        .end((err, res) => {
+          expect(res).to.have.status(403);
+          expect(res.body.msg).to.equal("Token expired or invalid");
+          done();
+        });
+    });
     /*
    -------------Tests Invalidated by the implementation of jwt this comment is to document previous implementation-----------
     it("should respond with a status 400 and an error message if passed an invalid user id", (done) => {
@@ -1002,6 +1033,17 @@ describe("Messages", () => {
       .end((err, res) => {
         token = res.headers.authorization;
       });
+    let secondToken;
+    chai
+      .request(app)
+      .post("/api/users/login")
+      .send({
+        email: "dbonnaire1@smugmug.com",
+        password: "tX6/7g2jup8(@g",
+      })
+      .end((err, res) => {
+        secondToken = res.headers.authorization;
+      });
     it("should respond with a status 200 and an array of messages in descending order by time for the passed chat", (done) => {
       const chatId = 2;
       chai
@@ -1025,7 +1067,19 @@ describe("Messages", () => {
           done();
         });
     });
-
+    it("should respond with a status 200 and an empty array if the user is requesting a chat they are not a part of", (done) => {
+      const chatId = 2;
+      chai
+        .request(app)
+        .get(`/api/messages/${chatId}`)
+        .set("authorization", secondToken)
+        .end((err, res) => {
+          const { messages } = res.body;
+          expect(res).to.have.status(200);
+          expect(messages).to.have.length(0);
+          done();
+        });
+    });
     it("should respond with a status 200 and an empty array if passed a chat id that does not exist yet", (done) => {
       chai
         .request(app)
@@ -1057,6 +1111,18 @@ describe("Messages", () => {
         .end((err, res) => {
           expect(res).to.have.status(401);
           expect(res.body.msg).to.equal("No token");
+          done();
+        });
+    });
+
+    it("should respond with a status 403 and an error message if an invalid authorization header is set", (done) => {
+      chai
+        .request(app)
+        .get(`/api/messages/2`)
+        .set("authorization", "Bad Token")
+        .end((err, res) => {
+          expect(res).to.have.status(403);
+          expect(res.body.msg).to.equal("Token expired or invalid");
           done();
         });
     });
@@ -1105,7 +1171,7 @@ describe("Messages", () => {
           done();
         });
     });
-    it("should respond with a status 400 and an error if the 2 passed ids are the same", (done) => {
+    it("should respond with a status 400 and an error if the ids passed are the same", (done) => {
       chai
         .request(app)
         .post("/api/chats")
@@ -1129,7 +1195,31 @@ describe("Messages", () => {
           done();
         });
     });
-    it("should respond with a status 404 and an error message if 1 or both of the users don't exist", (done) => {
+
+    it("should respond with a status 401 and an error message if no authorization header is set", (done) => {
+      chai
+        .request(app)
+        .post("/api/chats")
+        .send({ user2_id: 10 })
+        .end((err, res) => {
+          expect(res).to.have.status(401);
+          expect(res.body.msg).to.equal("No token");
+          done();
+        });
+    });
+    it("should respond with a status 403 and an error message if an invalid authorization header is set", (done) => {
+      chai
+        .request(app)
+        .post("/api/chats")
+        .set("authorization", "Bad Token")
+        .send({ user2_id: 10 })
+        .end((err, res) => {
+          expect(res).to.have.status(403);
+          expect(res.body.msg).to.equal("Token expired or invalid");
+          done();
+        });
+    });
+    it("should respond with a status 404 and an error message if one or both of the users don't exist", (done) => {
       chai
         .request(app)
         .post("/api/chats")
@@ -1157,6 +1247,17 @@ describe("Messages", () => {
       .end((err, res) => {
         token = res.headers.authorization;
       });
+    let secondToken;
+    chai
+      .request(app)
+      .post("/api/users/login")
+      .send({
+        email: "dbonnaire1@smugmug.com",
+        password: "tX6/7g2jup8(@g",
+      })
+      .end((err, res) => {
+        secondToken = res.headers.authorization;
+      });
     it("should respond with a status 201 and the id of the new message", (done) => {
       chai
         .request(app)
@@ -1167,6 +1268,55 @@ describe("Messages", () => {
           const { newMessageId } = res.body;
           expect(res).to.have.status(201);
           expect(newMessageId).to.equal(31);
+          done();
+        });
+    });
+    it("should respond with a status 400 and an error message if missing the message field", (done) => {
+      chai
+        .request(app)
+        .post("/api/messages/2")
+        .set("authorization", token)
+        .send({})
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+          expect(res.body.msg).to.equal("No message input");
+          done();
+        });
+    });
+
+    it("should respond with a status 401 and an error message if no authorization header is set", (done) => {
+      chai
+        .request(app)
+        .post("/api/messages/2")
+        .send({ message: "This is a test message" })
+        .end((err, res) => {
+          expect(res).to.have.status(401);
+          expect(res.body.msg).to.equal("No token");
+          done();
+        });
+    });
+
+    it("should respond with a status 403 and an error message if an invalid authorization header is set", (done) => {
+      chai
+        .request(app)
+        .post("/api/messages/2")
+        .set("authorization", "Bad Token")
+        .send({ message: "This is a test message" })
+        .end((err, res) => {
+          expect(res).to.have.status(403);
+          expect(res.body.msg).to.equal("Token expired or invalid");
+          done();
+        });
+    });
+    it("should respond with a status 404 and an error message if the user tries to post in a chat they are not a part of", (done) => {
+      chai
+        .request(app)
+        .post("/api/messages/2")
+        .set("authorization", secondToken)
+        .send({ message: "This is a test message" })
+        .end((err, res) => {
+          expect(res).to.have.status(404);
+          expect(res.body.msg).to.equal("No chat found");
           done();
         });
     });
